@@ -1,2 +1,0 @@
-@charset "UTF-8";
-.todolistModal  .modal-dialog{max-width: calc(100% - 50px);}

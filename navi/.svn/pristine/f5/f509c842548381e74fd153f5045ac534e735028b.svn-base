@@ -1,9 +1,0 @@
-package kr.or.navi.chat.service;
-
-import java.util.List;
-
-import kr.or.navi.vo.EmpVO;
-
-public interface ChatService {
-	public List<EmpVO> chatEmpList(String empId);
-}

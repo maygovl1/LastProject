@@ -1,3 +1,0 @@
-prodPath=/resources/prodImages/
-applicationName=ddit
-clientSecretFilePath=classpath:kr/or/ddit/spring/client_secret.json
