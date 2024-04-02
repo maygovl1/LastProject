@@ -1,0 +1,39 @@
+package kr.or.navi.mypagedetail.mybookmark.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import kr.or.navi.mypage.service.MypageService;
+import kr.or.navi.security.RealUser;
+import kr.or.navi.vo.BookmarkVO;
+import kr.or.navi.vo.EmpVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/mypage/bookmark")
+public class MyBookmarkController {
+	
+	@Inject
+	MypageService service;
+	
+	@GetMapping
+	public String mypageBook(@RealUser EmpVO realUser, Model model) {
+		List<BookmarkVO> bookmarkList = service.bookmarkList(realUser.getEmpId());
+		model.addAttribute("list", bookmarkList);
+		return "mypage/bookmark/myBookmark";
+	}
+	
+	@PostMapping
+	public String insertBookmark() {
+		
+		return "mypage/bookmark/myBookmark";
+	}
+}

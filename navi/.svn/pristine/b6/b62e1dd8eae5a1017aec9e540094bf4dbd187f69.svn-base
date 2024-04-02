@@ -1,0 +1,10 @@
+$(document).ready(function(){
+    $(".moveMenu").each(function(i, e){
+        let url = $(e).data("url");
+        let realUrl = window.location.href;
+
+        if (realUrl.endsWith(url)){
+            $(e).children().addClass("active");
+        }
+    });
+});

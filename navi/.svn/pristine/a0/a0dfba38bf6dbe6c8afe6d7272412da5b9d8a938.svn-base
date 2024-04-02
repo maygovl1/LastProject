@@ -1,0 +1,42 @@
+package kr.or.navi.projectdetail.filesave.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.projectdetail.filesave.dao.FileSaveNoriceDAO;
+import kr.or.navi.vo.FileSaveNoticeVO;
+import kr.or.navi.vo.FileSaveVO;
+@Service
+public class FileSaveServiceImpl implements FileSaveService {
+	@Inject
+	private FileSaveNoriceDAO dao;
+	@Override
+	public List<FileSaveNoticeVO> retrieveFileSaveNotice(PaginationInfo paging, String proId) {
+		int totalRecord = dao.selectTotalRecord(paging, proId);
+		paging.setTotalRecord(totalRecord);
+		return dao.selectFileSaveNoiceList(paging,proId);
+	}
+	@Override
+	public FileSaveNoticeVO retrieveFileSaveVO(String fsnId) {
+		return dao.selectFileSaveNoriceOne(fsnId);
+	}
+	@Override
+	public int removeFileSave(String fsnId) {
+		return dao.deleteFileSaveNotice(fsnId);
+	}
+	@Override
+	public int modifyFileSave(FileSaveNoticeVO updateFs) {
+		return dao.updateFileSaveNotice(updateFs);
+	}
+	@Override
+	public int createFileSave(FileSaveNoticeVO insertFs) {
+		FileSaveVO fsv = dao.selectFileSave(insertFs.getProId());
+		insertFs.setFsId(fsv.getFsId());
+		return dao.insertFileSaveNotice(insertFs);
+	}
+
+}

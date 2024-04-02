@@ -1,0 +1,15 @@
+package kr.or.navi.board.form.service;
+
+import java.util.List;
+
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.vo.BoardPostVO;
+
+public interface FormService {
+	public List<BoardPostVO> retrieveFormList(PaginationInfo paging);
+	public BoardPostVO retrieveForm(String bpId);
+	public int formModify(BoardPostVO form);
+	public int deleteForm(String bpId);
+	public int modifyForm(BoardPostVO updateBp);
+	public int createForm(BoardPostVO insertBp);
+}

@@ -1,0 +1,72 @@
+package kr.or.navi.chat.web.controller;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.navi.chat.web.service.ChatService;
+import kr.or.navi.security.RealUser;
+import kr.or.navi.vo.EmpVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/chat")
+public class ChatController {
+	
+	@Inject
+	ChatService service;
+	
+	@ResponseBody
+	@PostMapping("/login")
+	public String chatPw(@RealUser EmpVO realUser, @RequestBody Map<String, String> requestBody) {
+		String pass = realUser.getEmpPass();
+		String password = requestBody.get("password");
+	    // requestBody를 직접 처리
+	    if(Objects.equals(pass, password)) {
+	        return "ok";
+	    }
+	    return "fail";
+	}
+	
+//	@GetMapping("/chatEmpList")
+//	public String chatEmpList(@RealUser EmpVO realUser, Model model) {
+//		
+//		String empName = realUser.getEmpName();
+//		model.addAttribute("empName", empName);
+//		String deptName = realUser.getDeptName();
+//		model.addAttribute("deptName", deptName);
+//		String psName = realUser.getPsName();
+//		model.addAttribute("psName", psName);
+//		return "chat/chatEmpList";
+//	}
+
+	@ResponseBody	
+	@PostMapping("/chatEmpList")
+	public List<EmpVO> chatEmpListt(@RealUser EmpVO realUser, Model model ) {
+		List<EmpVO> chatEmpList = service.chatEmpList(realUser.getEmpId());
+		model.addAttribute("chatEmpList", chatEmpList);
+		return chatEmpList;
+	}
+	
+	
+	@GetMapping("/test")
+	public String test(@RealUser EmpVO realUser, Model model) {
+		
+		String empName = realUser.getEmpName();
+		model.addAttribute("empName", empName);
+		return "chat/test";
+	}
+	
+}

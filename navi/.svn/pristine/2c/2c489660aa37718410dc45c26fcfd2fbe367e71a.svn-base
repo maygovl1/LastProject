@@ -1,0 +1,87 @@
+/**
+ * 현재 페이지의 기본 URI를 가져옵니다.
+ */
+	
+function getCsrfToken(){
+   return document.querySelector('meta[name="_csrf"]').getAttribute('content');
+}
+
+// CSRF 헤더를 가져오는 함수
+function getCsrfHeader(){
+   return document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+}
+  
+$("#chatForm").on("submit", function(event) {
+	console.log(event)
+   let url = this.action; // form의 action 속성을 가져옴
+   let method = this.method; // form의 method 속성을 가져옴
+   let listBody = document.querySelector("#listBody"); // listBody 요소를 가져옴
+   event.preventDefault(); // 기본 동작 방지
+
+   // fetch를 통해 데이터를 서버에 전송
+   fetch(url, {
+      method: "POST",
+      headers: {
+         "Accept": "application/json",
+         [getCsrfHeader()]: getCsrfToken() // CSRF 헤더 추가
+      }
+   }).then(resp => {
+      if (resp.ok) {
+         return resp.json(); // JSON 형식의 응답을 반환
+      } else {
+         throw new Error("오류발생", { cause: resp }) // 오류 발생 시 에러 처리
+      }
+   }).then(jsonObj => {
+      console.log(jsonObj) // JSON 데이터 출력
+      for (let e of jsonObj) {
+         // mberList에 데이터 추가
+         empList.add({
+			'empImg': e.empImg + 2 ,
+            'empOne': e.empName + e.psName + '(' + e.deptName + ')',
+         });	
+      }
+   }).catch(err => {
+      console.error(err) // 오류 출력
+   }).finally(() => {
+      // 빈 td 요소 숨기기
+      var tdList = document.querySelectorAll('#empList span');
+      tdList.forEach(function(span) {
+         if (span.innerHTML.trim() === '') {
+            span.style.display = 'none';
+         }
+      });
+   })
+   return false; // 기본 동작 방지
+})
+
+// empName 클래스를 가진 요소를 클릭했을 때의 이벤트 핸들러
+$(".empName").on("click",function(e){
+   console.log(e.target) // 클릭한 요소 출력
+})
+
+
+function loadScript(){
+	let options = { "valueNames": ["empImg", "empOne"], "page": Infinity, "pagination": false } 
+	empList = new List('cstmrList', options)
+	console.log($(chatForm))
+	$("#chatForm").submit(); // chatForm 제출
+	
+    const empImg = document.querySelector('.empImg');
+    empImg.addEventListener('click', function() {
+        const dropdownMenu = this.nextElementSibling;
+        dropdownMenu.classList.toggle('show');
+    });
+
+    // Close dropdown when clicking outside
+    window.addEventListener('click', function(e) {
+        if (!empImg.contains(e.target)) {
+            const dropdownMenus = document.querySelectorAll('.dropdown-menu');
+            dropdownMenus.forEach(function(menu) {
+                if (menu.classList.contains('show')) {
+                    menu.classList.remove('show');
+                }
+            });
+        }
+    });
+}
+loadScript();

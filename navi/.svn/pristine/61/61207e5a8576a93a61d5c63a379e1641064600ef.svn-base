@@ -1,0 +1,15 @@
+package kr.or.navi.common.dao;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import kr.or.navi.vo.CommonVO;
+
+@Mapper
+public interface CommonDAO {
+	public List<CommonVO> selectProjectStateList();
+	public List<CommonVO> selectIssueStateList();
+	public List<CommonVO> selectIssueImportStateList();
+	public List<CommonVO> selectBoardTypeList();
+}

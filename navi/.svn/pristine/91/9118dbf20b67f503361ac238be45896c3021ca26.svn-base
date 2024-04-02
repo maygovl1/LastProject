@@ -1,0 +1,18 @@
+package kr.or.navi.board.photo.service;
+
+import java.util.List;
+
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.vo.BoardCommentVO;
+import kr.or.navi.vo.BoardPostVO;
+
+public interface PhotoService {
+	
+	public List<BoardPostVO> retrievePhotoList(PaginationInfo paging);
+	public BoardPostVO retrievePhoto(String bpId);
+	public int modifyPhoto(BoardPostVO vo);
+	public int removePhoto(String bpId);
+	public int createPhoto(BoardPostVO vo);
+	public int viewCnt(String bpId);
+	
+}

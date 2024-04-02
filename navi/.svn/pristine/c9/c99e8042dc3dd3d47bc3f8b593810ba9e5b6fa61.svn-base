@@ -1,0 +1,65 @@
+package kr.or.navi.board.photo.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import kr.or.navi.common.paging.SearchCondition;
+import kr.or.navi.common.paging.BootstrapFormBasePaginationRenderer;
+import kr.or.navi.common.paging.PaginationRenderer;
+import kr.or.navi.board.photo.service.PhotoService;
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.vo.BoardCommentVO;
+import kr.or.navi.vo.BoardPostVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Controller
+@RequestMapping("/board/photo")
+@Slf4j
+public class PhotoRetrieveController {
+
+	@Inject
+	private PhotoService service;
+	
+	@GetMapping
+	public String photoList(
+			@RequestParam(required = false, defaultValue = "1") int page
+			, Model model
+			, @ModelAttribute("simpleCondition") SearchCondition simpleCondition
+			
+			) {
+		PaginationInfo paging = new PaginationInfo();
+		paging.setCurrentPage(page);
+		paging.setSimpleCondition(simpleCondition);
+	
+		List<BoardPostVO> photoList = service.retrievePhotoList(paging);
+		model.addAttribute("photoList",photoList);
+		PaginationRenderer renderer = new BootstrapFormBasePaginationRenderer("#searchForm");
+		String pagingHTML = renderer.renderPagination(paging);
+		model.addAttribute("pagingHTML", pagingHTML);
+		
+		return "board/photo";
+		
+	}
+	@GetMapping("{bpId}")
+	public String PhotoDetail(Model model, @PathVariable String bpId) {
+		BoardPostVO vo = service.retrievePhoto(bpId);
+		model.addAttribute("bp", vo);
+		return "board/photo_detail";
+	}
+//	@GetMapping("{bcId}")
+//	public String PhotoComment(Model model, @PathVariable String bcId) {
+//		BoardCommentVO vo = service.retrieveComment(bcId);
+//		model.addAttribute("bc", vo);
+//		return "board/photo_detail";
+//	}
+	
+}

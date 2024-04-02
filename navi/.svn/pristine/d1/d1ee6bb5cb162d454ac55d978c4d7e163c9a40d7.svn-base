@@ -1,0 +1,29 @@
+package kr.or.navi.vo;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(of = "bbId")
+public class BookmarkIssueVO {
+	private String bbId;
+	private String bpId;
+	private String EmpId;
+	private LocalDateTime BbRegDt;
+	private LocalDateTime BbDelDt;
+
+	public String getBbRegDtStr() {
+		if (BbRegDt != null)
+			return BbRegDt.format(DateTimeFormatter.ISO_DATE);
+		return null;
+	}
+	
+	public String getBbDelDtStr() {
+		if (BbDelDt != null)
+			return BbDelDt.format(DateTimeFormatter.ISO_DATE);
+		return null;
+	}
+}

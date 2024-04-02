@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.navi.wiki.dao.WikiDAO">
+	<sql id="searchFrag">
+		<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+			AND
+			<choose>
+				<when test="simpleCondition.searchType eq 'title'">
+					INSTR(BP_TITLE, #{simpleCondition.searchWord}) > 0
+				</when>
+				<when test="simpleCondition.searchType eq 'name'">
+					INSTR(EMP.EMP_NAME, #{simpleCondition.searchWord}) > 0
+				</when>
+				<otherwise>
+					INSTR(BP_TITLE, #{simpleCondition.searchWord}) > 0
+					OR
+					INSTR(EMP.EMP_NAME, #{simpleCondition.searchWord}) > 0
+				</otherwise>
+			</choose>
+		</if>
+	</sql>
+
+<select id="selectWikiList" resultType="WikiVO" parameterType="PaginationInfo">
+	SELECT B.*
+			FROM(
+	    SELECT ROWNUM RNUM, A.*
+				FROM(
+                SELECT
+                    wiki_id
+                  , project.pro_id
+                  , project.PRO_NAME
+                  , EMP.EMP_NAME
+                  , project.PRO_REG_DT
+                  , project.PRO_DDLINE_DT
+                  , project.PRO_ST_ID
+                  , wiki_title
+                  , wiki_cn
+                  , wiki_reg_dt
+                  , wiki_mod_dt
+                  , wiki_del_dt
+                  , common.cm_name
+                  , common.cm_id
+                FROM
+                    wiki
+                JOIN
+                    PROJECT ON(wiki.pro_id = project.pro_id)
+                JOIN
+                    TEAM ON(project.pro_id=team.pro_id)
+                JOIN
+                    EMP ON(team.emp_id=emp.emp_id)
+                JOIN common on (project.pro_st_id = common.cm_id)
+                
+                WHERE
+                    team.role_id = 'ROLE_PL'
+                AND WIKI_DEL_DT IS NULL
+                <include refid="searchFrag" />
+                ORDER by WIKI_REG_DT desc 
+               ) A
+         ) B
+          <where>
+			<if test="startRow gt 0 and endRow gt 0">
+				<![CDATA[
+					RNUM >= #{startRow} AND RNUM <= #{endRow}
+				]]>
+			</if>
+		</where>
+</select>
+</mapper>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.navi.quick.food.dao.FoodDAO">
+
+
+	<select id="selectFoodList" resultType="FoodVO">
+		SELECT
+		    TRIM(FOOD_ID) AS FOOD_ID
+		  , FOOD_PLACE
+		  , FOOD_NAME
+		  , FOOD_IMGURL
+		FROM
+		    FOOD
+		ORDER BY FOOD_ID
+	</select>
+	
+	<select id="selectOne" resultType="FoodVO" parameterType="string">
+	    SELECT
+	        TRIM(FOOD_ID) AS FOOD_ID,
+	        FOOD_PLACE,
+	        FOOD_NAME,
+	        FOOD_TEL,
+	        FOOD_ADDR,
+	        FOOD_IMGURL,
+	        FOOD_OPENTIME,
+	        FOOD_CLOSETIME
+	    FROM
+	        FOOD
+	    WHERE FOOD_ID = '${foodId, jdbcType=VARCHAR}'
+	    ORDER BY FOOD_ID
+	</select>
+
+	<select id="selectRecomFoodList" resultType="FoodVO">
+		SELECT 
+			F.FOOD_ID,
+			F.FOOD_PLACE,
+			F.FOOD_NAME,
+			F.FOOD_TEL,
+			F.FOOD_ADDR,
+			F.FOOD_IMGURL,
+			F.FOOD_OPENTIME,
+			F.FOOD_CLOSETIME,
+			FR.WEATHER_ID,
+			FR.RANK
+		FROM 
+			FOOD F
+			JOIN FOOD_RECOM FR ON F.FOOD_ID = FR.FOOD_ID
+		WHERE 
+			FR.AGE = '${map.age}' AND 
+			FR.GEN = '${map.gen}' AND 
+			FR.WEATHER_ID = '${map.weatherId}'
+		ORDER BY 
+			FR.RANK
+	</select>
+	
+
+	<insert id="insertFoodViews">
+		INSERT INTO food_views (
+		    emp_id
+		    , food_id
+			, weather_id
+		) VALUES (
+		    #{empId}
+		  , #{foodId}
+		  , #{weatherId}
+		)
+	</insert>
+
+</mapper>

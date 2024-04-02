@@ -1,0 +1,30 @@
+package kr.or.navi.board.prais;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("/board/prais")
+public class praisController {
+
+	@GetMapping
+	public String praisPage() {
+		return "board/prais";
+	}
+	
+	@GetMapping("register")
+	public String praisRegisterPage() {
+		return "board/prais_register";
+	}
+
+	@GetMapping("detail")
+	public String praisDetailPage() {
+		return "board/prais_detail";
+	}
+
+	@GetMapping("modify")
+	public String praisModifyPage() {
+		return "board/prais_mod";
+	}
+}

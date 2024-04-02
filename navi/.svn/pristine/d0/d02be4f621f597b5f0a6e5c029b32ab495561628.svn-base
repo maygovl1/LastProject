@@ -1,0 +1,60 @@
+package kr.or.navi.projectdetail.gantt.vo;
+
+import java.io.Serializable;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+
+import kr.or.navi.vo.TaskVO;
+import lombok.Data;
+
+public class GanttEventVO implements Serializable{
+	
+	private transient TaskVO task;
+	private String idx;
+	private String nm;
+	private String tite;
+	private String con;
+	private List<HashMap<String, Object>> values=new LinkedList<HashMap<String,Object>>();
+	public void setIdx(int idx) {
+		this.idx=""+idx;
+	}
+	public GanttEventVO(TaskVO task) {
+		this.task=task;
+	}
+	public String getNm() {
+		return task.getTaskRegId();
+	}
+	public String getTite() {
+		return task.getTaskTitle();
+	}
+	public String getCon() {
+		return task.getTaskCn();
+	}
+	public String getIdx() {
+		return idx;
+	}
+	public List<HashMap<String, Object>> getValues() {
+		LocalDateTime rd = task.getTaskRegDt();
+		Instant it = rd.toInstant(ZoneOffset.UTC);
+		Long epochMilli = it.toEpochMilli();
+		
+		LocalDateTime rd1 = task.getTaskDdlineDt();
+		Instant it1 = rd.toInstant(ZoneOffset.UTC);
+		Long epochMilli1 = it.toEpochMilli();
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		map.put("from",epochMilli);
+		map.put("to",epochMilli1);
+		map.put("label", task.getTaskTitle());
+		map.put("customClass", "ganttRed");
+		values.add(map);
+		return values;
+	}
+	@Override
+	public String toString() {
+		return task.toString();
+	}
+}

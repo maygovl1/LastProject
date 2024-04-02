@@ -1,0 +1,166 @@
+body {
+	background-color: #E3E3FA;
+}
+
+.mainbox {
+	background-color: #E3E3FA;
+	margin: auto;
+	height: 600px;
+	width: 600px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.err {
+	color: #6D62E0;
+	font-size: 11rem;
+	position: absolute;
+	top: 8%;
+	left: 30%;
+}
+
+.far1 {
+	position: absolute;
+	left: 90%;
+	top: 5%;
+    width: 60px;
+    height: auto;
+}
+.far1 img {
+	
+    max-width: 100%; /* 부모 요소에 맞게 이미지의 최대 너비를 지정합니다 */
+    height: auto; /* 높이를 자동으로 조절하여 비율을 유지합니다 */
+	animation: rotate_image2 6s linear infinite;
+	transform-origin: 50% 50%;
+}
+
+.far2 {
+	position: absolute;
+	left: 90%;
+	top: 5%;
+    width: 60px;
+    height: auto;
+}
+.far2 img {
+	
+    max-width: 100%; /* 부모 요소에 맞게 이미지의 최대 너비를 지정합니다 */
+    height: auto; /* 높이를 자동으로 조절하여 비율을 유지합니다 */
+	animation: rotate_image2 6s linear infinite;
+	transform-origin: 50% 50%;
+}
+
+.far3 {
+	position: absolute;
+	left: 70%;
+	top: 30%;
+    width: 60px;
+    height: auto;
+}
+.far3 img {
+	
+    max-width: 100%; /* 부모 요소에 맞게 이미지의 최대 너비를 지정합니다 */
+    height: auto; /* 높이를 자동으로 조절하여 비율을 유지합니다 */
+	animation: rotate_image2 6s linear infinite;
+	transform-origin: 50% 50%;
+}
+
+.msg {
+	text-align: center;
+	font-size: 1.6rem;
+	position: absolute;
+	left: 16%;
+	top: 45%;
+	width: 75%;
+}
+
+.page {
+	font-size: 3rem;
+	margin: 20px 0px;
+}
+
+a {
+	text-decoration: none;
+	color: #6D62E0;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+
+@keyframes rotate_image1 { 
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes rotate_image2 { 
+	100% {
+		transform: rotate(-360deg);
+	}
+}
+
+/* button */
+
+:root {
+  --bg: #3C465C;
+  --primary: #6D62E0;
+  --solid: #fff;
+  --btn-w: 10em;
+  --dot-w: calc(var(--btn-w)*.2);
+  --tr-X: calc(var(--btn-w) - var(--dot-w));
+}
+* {box-sizing: border-box;}
+*:before, *:after {box-sizing: border-box;}
+
+.btn {
+  position: relative;
+  margin: 0 auto;
+  width: var(--btn-w);
+  color: var(--primary);
+  border: .15em solid var(--primary);
+  border-radius: 5em;
+  text-transform: uppercase;
+  text-align: center;
+  font-size: 1.3em;
+  line-height: 2em;
+  cursor: pointer;  
+}
+.dot {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: var(--dot-w);
+  height: 100%;
+  border-radius: 100%;
+  transition: all 300ms ease;
+  display: none;
+}
+.dot:after {
+  content: '';
+  position: absolute;
+  left: calc(50% - .4em);
+  top: -.4em;
+  height: .8em;
+  width: .8em;
+  background: var(--primary);
+  border-radius: 1em;
+  border: .25em solid var(--solid);
+  box-shadow: 0 0 .7em var(--solid),
+        0 0 2em var(--primary);
+}
+.btn:hover .dot,
+.btn:focus .dot {
+  animation: atom 2s infinite linear;
+  display: block;
+}
+
+@keyframes atom {
+  0% {transform: translateX(0) rotate(0);}
+  30%{transform: translateX(var(--tr-X)) rotate(0);}
+  50% {transform: translateX(var(--tr-X)) rotate(180deg);}
+  80% {transform: translateX(0) rotate(180deg);}
+  100% {transform: translateX(0) rotate(360deg);}
+}

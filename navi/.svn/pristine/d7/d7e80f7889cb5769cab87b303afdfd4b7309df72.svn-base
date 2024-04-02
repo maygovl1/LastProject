@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.navi.board.share.dao.ShareDAO">
+	<sql id="searchFrag">
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+			and
+				<choose>
+					<when test="simpleCondition.searchType eq 'title'">
+						INSTR(BP_TITLE, #{simpleCondition.searchWord}) > 0	
+					</when>
+					<when test="simpleCondition.searchType eq 'name'">
+						INSTR(EMP.EMP_NAME, #{simpleCondition.searchWord}) > 0
+					</when>
+					<otherwise>
+						INSTR(BP_TITLE, #{simpleCondition.searchWord}) > 0
+						OR
+						INSTR(EMP.EMP_NAME, #{simpleCondition.searchWord}) > 0
+					</otherwise>
+				</choose>
+			</if>
+	</sql>
+	
+	<select id="selectShareList" resultMap="shareMap" parameterType="PaginationInfo">
+		SELECT B.* FROM(
+			SELECT ROWNUM RNUM, A.* FROM (
+				SELECT
+					bp_id
+					, EMP.emp_name
+					, bp_title
+					, bp_cn
+					, bp_reg_dt
+					, share_stat.shr_name
+					, bp_cnt
+				FROM
+					board_post
+				JOIN
+					EMP ON(board_post.emp_id = emp.emp_id)
+                JOIN
+                    SHARE_STAT ON(board_post.bp_shr_yn = share_stat.bp_shr_yn)
+				WHERE
+					BRD_ID = 'BN0006'
+					AND bp_del_dt IS NULL
+					<include refid="searchFrag" />
+				ORDER BY 
+					BP_REG_DT DESC
+			) A
+		) B
+		<where>
+			<if test="startRow gt 0 and endRow gt 0">
+				<![CDATA[
+					RNUM >= #{startRow} AND RNUM <= #{endRow}
+				]]>
+			</if>
+		</where>
+	</select>
+	
+	<select id="totalRecord" parameterType="PaginationInfo">
+		select COUNT(*)FROM
+				(
+					SELECT
+					bp_id
+					, EMP.emp_name
+					, bp_title
+					, bp_reg_dt
+					, share_stat.shr_name
+					, bp_cnt
+				FROM
+					board_post
+				JOIN
+					EMP ON(board_post.emp_id = emp.emp_id)
+                JOIN
+                    SHARE_STAT ON(board_post.bp_shr_yn = share_stat.bp_shr_yn)
+				WHERE
+					BRD_ID = 'BN0006'
+					AND bp_del_dt IS NULL
+						<include refid="searchFrag" />
+					ORDER BY 
+						BP_REG_DT DESC
+				) A
+			
+	
+	</select>
+	
+	<select id="selectShare" resultMap="shareMap">
+		SELECT
+			bp_id
+		  , share_stat.shr_name
+		  ,	board_post.bp_shr_yn
+		  , EMP.emp_Name
+		  , bp_title
+		  , bp_cn
+		  , bp_reg_dt
+		  , bp_del_dt
+		  , bp_mod_id
+		  , bp_mod_dt
+		  , bp_cnt
+		FROM
+		    board_post
+		JOIN
+		    EMP ON(board_post.emp_id = emp.emp_id)
+		JOIN
+		    SHARE_STAT ON(board_post.bp_shr_yn = share_stat.bp_shr_yn)
+		WHERE
+		    BRD_ID = 'BN0006'
+		    AND BP_ID = #{bpId}
+			
+	</select>
+	<resultMap type="BoardPostVO" id="shareMap" autoMapping="true">
+		<id column="BP_ID" property="bpId" />
+		<result column="BP_CN" property="bpCn" jdbcType="CLOB" />
+	</resultMap>
+	
+	<update id="updateShare" parameterType="BoardPostVO">
+		UPDATE
+		    BOARD_POST
+		SET
+		    BP_TITLE = #{vo.bpTitle}
+		    , BP_MOD_ID = #{vo.bpModId}
+		    , BP_MOD_DT = SYSTIMESTAMP
+		    , BP_SHR_YN = #{vo.bpShrYn}
+		    , BP_CN = #{vo.bpCn}
+		WHERE
+		    BOARD_POST.BRD_ID = 'BN0006' AND BOARD_POST.BP_ID = #{vo.bpId}
+	</update>
+	
+	<delete id="deleteShare">
+		UPDATE board_post
+		SET
+		    bp_del_dt = SYSTIMESTAMP
+		WHERE
+		        bp_id = #{bpId}
+	</delete>
+	
+	<insert id="insertShare" parameterType="BoardPostVO">
+	<selectKey order="BEFORE" resultType="String" keyProperty="bpId">
+			SELECT 
+				'B' || 
+				LPAD(
+				    NVL(
+				        TO_NUMBER(
+				            SUBSTR(MAX(BP_ID), 2)
+				            ), 0) + 1, 5, '0')
+							FROM BOARD_POST
+	</selectKey>
+	
+				INSERT INTO board_post (
+					    bp_id
+					    , emp_id
+					    , bp_mod_id
+					    , brd_id
+					    , bp_title
+					    , bp_cn
+					    , bp_reg_dt
+					    , bp_del_dt
+					    , bp_op_yn
+					    , bp_cnt
+					    , bp_mod_dt
+					    , bp_shr_yn
+					    , bp_ntc_id
+					    , bp_qna_as
+					    , bp_qna_yn
+					) VALUES (
+					    #{bpId}
+					  , #{empId}
+					  , NULL
+					  , 'BN0006'
+					  , #{bpTitle}
+					  , #{bpCn,jdbcType=CLOB}
+					  , SYSTIMESTAMP
+					  , NULL
+					  , NULL
+					  , 0
+					  , NULL
+					  , 'Y'
+					  , 'BN0006'
+					  , NULL
+					  , NULL
+					)
+	</insert>
+	
+	<insert id="insertFile" parameterType="BoardPostFileVO">
+	<selectKey order="BEFORE" resultType="String" keyProperty="bpFileId">
+			SELECT 
+				'F' || 
+				LPAD(
+				    NVL(
+				        TO_NUMBER(
+				            SUBSTR(
+				            MAX(BP_FILE_ID), 2)
+				            ), 0) + 1, 5, '0')
+							FROM BOARD_POST_FILE
+	</selectKey>
+			INSERT INTO board_post_file (
+			    bp_file_id
+			    , bp_id
+			    , bp_file_gb_id
+			    , bp_uuid_name
+			    , bp_org_nm
+			    , bp_main_img_yn
+			    , bp_file_size
+			) VALUES (
+			    #{bpFileId}
+			  , #{bpId}
+			  , #{bpFileGbId}
+			  , #{bpUuidName}
+			  , #{bpOrgNm}
+			  , NULL
+			  , #{bpFileSize}
+			)
+	</insert>
+	
+	<select id="selectFile" resultType="BoardPostFileVO">
+			SELECT
+			    bp_file_id
+			  , board_post.bp_id
+			  , bp_uuid_name
+			  , bp_org_nm
+			  , bp_file_gb_id
+			  , bp_main_img_yn
+			  , bp_file_size
+			FROM
+			    board_post_file
+			join
+			    board_post on(board_post_file.bp_id = board_post.bp_id)
+			where
+			    board_post_file.bp_id = #{bpId}
+	</select>
+	
+	<select id="getAttach" parameterType="String" resultType="BoardPostFileVO">
+			SELECT
+			    bp_file_id
+			  , bp_id
+			  , bp_file_gb_id
+			  , bp_uuid_name
+			  , bp_org_nm
+			  , bp_main_img_yn
+			  , bp_file_size
+			FROM
+			    board_post_file
+			WHERE
+			    bp_file_id = #{bpFileId}
+	</select>
+	
+	<update id="updateCnt">
+		UPDATE
+		    BOARD_POST
+		SET
+		  BP_CNT = BP_CNT + 1
+		WHERE
+		    BOARD_POST.BRD_ID = 'BN0006' AND BOARD_POST.BP_ID = #{bpId}
+	</update>
+	
+	<delete id="deleteFileSaveFile">
+		DELETE FROM BOARD_POST_FILE WHERE bp_file_id = #{bpFileId}
+	</delete>
+	
+</mapper>

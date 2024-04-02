@@ -1,0 +1,14 @@
+package kr.or.navi.chat.dao;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.vo.EmpVO;
+
+@Mapper
+public interface ChatDAO {
+	public List<EmpVO> selectChatEmpList(@Param("empId") String empId, @Param("paging") PaginationInfo paging);
+}

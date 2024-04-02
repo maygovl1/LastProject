@@ -1,0 +1,126 @@
+package kr.or.navi.vo;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
+
+import org.springframework.format.annotation.DateTimeFormat;
+
+import kr.or.navi.validate.InsertGroup;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(of="taskId")
+public class TaskVO {
+	
+	private int rnum;
+	
+	private String taskId;//일감ID
+	@NotBlank
+	private String tsId;//일감상태ID
+	
+	private String proId;//프로젝트ID
+//	@NotBlank
+	private String prodName;
+	@NotBlank
+	private String taskManId;//담당자
+	private String taskManName;
+	private EmpVO taskManEmp;
+	private String taskTopId;//상위일감
+	private String tpsId;//일감처리ID
+	private String taskRegId;//일감등록일
+	private EmpVO regEmp;
+	@NotBlank
+	private String taskTitle;//일감제목
+//	@NotNull
+	private LocalDateTime taskRegDt;//일감등록일
+	private LocalDateTime taskDdlineDt;//일감마감일
+	private LocalDateTime taskModDt;//일감수정일
+	@NotBlank
+	private String taskCn;//일감내용
+//	@NotNull
+	private Integer taskRqrd;//일감소요시간
+	@NotNull
+	private Integer taskEstTime; // 일감예상시간
+	
+	private String empName;
+	@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+	private LocalDateTime taskCompDt; //일감처리완료일
+	private LocalDateTime taskDelDt;//일감삭제일
+	private TaskStatusVO taskStatus;
+	private TaskProcessStatusVO taskProcessStatus;
+	private Map<String, Object> projectMap; // 1대 1의 관계 -> mybatis.mapping.xml에서 association의 property명
+	//private Map<String, Object> statusMap; // 1대 1의 관계 -> mybatis.mapping.xml에서 association의 property명
+	//private List<TeamVO> teamList;
+	
+	private EmpVO empVO; // 담당자 구분 필요
+	private TaskStatusVO tsVO; // 일감의 모든데이트 필요
+	private ProjectVO projectVO; //프로젝트의 아이디 필요
+	//소문자로 get빼고 taskRegDt로 기입해야 함
+	public String getTaskRegDtStr() {
+		if(taskRegDt==null) {
+			return null;
+		}
+		return taskRegDt.format(DateTimeFormatter.ISO_DATE); // 문자열로 날짜까지만 나옴
+	}
+	
+	public String getTaskDdlineDtStr() {
+		if(taskDdlineDt==null) {
+			return null;
+		}
+		return taskDdlineDt.format(DateTimeFormatter.ISO_DATE);
+	}
+	
+	public String getTaskModDtStr() {
+		if(taskModDt==null) {
+			return null;		}
+		return taskModDt.format(DateTimeFormatter.ISO_DATE);
+	}
+	
+	public String getTaskCompDtStr() {
+		if(taskCompDt==null) {
+			return null;
+		}
+		return taskCompDt.format(DateTimeFormatter.ISO_DATE);
+	}
+	
+	public String getTaskDelDtStr() {
+		if(taskDelDt==null) {
+			return null;
+		}
+		return taskDelDt.format(DateTimeFormatter.ISO_DATE);
+	}
+	
+	//처리 완료 예정일
+	public LocalDateTime getTaskExCompDt() {
+		if(taskCompDt==null) {
+			return null;
+		}
+		int endDays=0;
+		if("T00003".equals(tsId)) {
+			endDays=3;
+		}else {
+			endDays=7;
+		}
+		return taskRegDt.plusDays(endDays);
+	}
+	//처리 완료 예정일 문자열
+	public String getTaskExCompDtStr() {
+		if(taskCompDt==null) {
+			return null;
+		}
+		LocalDateTime taskExCompDt = getTaskExCompDt();
+		return taskExCompDt.format(DateTimeFormatter.ISO_DATE);
+	}
+	
+	
+	
+}

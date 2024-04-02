@@ -1,0 +1,125 @@
+package kr.or.navi.admin.ano.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.validation.groups.Default;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import kr.or.navi.board.ano.controller.AnoController;
+import kr.or.navi.board.ano.service.AnoService;
+import kr.or.navi.common.paging.BootstrapFormBasePaginationRenderer;
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.common.paging.PaginationRenderer;
+import kr.or.navi.security.RealUser;
+import kr.or.navi.validate.AnoInsertGroup;
+import kr.or.navi.vo.BoardPostVO;
+import kr.or.navi.vo.EmpVO;
+import lombok.extern.slf4j.Slf4j;
+@Slf4j
+@Controller
+@RequestMapping("/admin")
+public class AdminAnoController {
+	@Inject
+	private AnoService service;
+	@GetMapping("ano")
+	public String anoPage(@RequestParam Map<String, Object> detailCondition
+			, @RequestParam(name="page", required = false, defaultValue = "1") int currentPage
+			,Model model) {
+		log.info("detailCondition : {}",detailCondition);
+		String boardType = (String)detailCondition.get("baordType");
+		if(StringUtils.isNotBlank(boardType)) {
+			boardType.trim();
+		}
+		detailCondition.put("boardType", boardType);
+		PaginationInfo paging = new PaginationInfo(5,5);
+		paging.setCurrentPage(currentPage);
+		paging.setDetailCondition(detailCondition);
+		List<BoardPostVO> anoList = service.retrieveAnoList(paging);
+		model.addAttribute("anoList",anoList);
+		PaginationRenderer renderer = new BootstrapFormBasePaginationRenderer("#searchForm");
+		String pagingHTML = renderer.renderPagination(paging);
+		model.addAttribute("pagingHTML",pagingHTML);
+		model.addAttribute("paging",paging);
+		return "admin/anoboard/adminAnoList";
+	}
+	
+	@GetMapping("ano/add")
+	public String anoAddPage(@ModelAttribute("addAno") BoardPostVO addAno, Model model) {
+		return "admin/anoboard/adminAnoAdd";
+	}
+	@PostMapping("ano/add")
+	public String anoAddController(@Validated(AnoInsertGroup.class) @ModelAttribute("addAno")  BoardPostVO addAno,Errors errors,Model model,@RealUser EmpVO emp) {
+		log.info("addAno : {}",addAno);
+		if(!errors.hasErrors()) {
+			//에러가 없으니까 실제 등록 처리
+			addAno.setEmpId(emp.getEmpId());
+			int cnt = service.createAno(addAno);
+			if(cnt>0) {
+				//성공시
+				return "redirect:/admin/ano";
+			}else {
+				//실패시
+				return "admin/anoboard/adminAnoAdd";
+			}
+		}else {
+			//에러가 있으니까 다시 입력처리
+			return "admin/anoboard/adminAnoAdd";
+		}
+		
+	}
+
+	@GetMapping("ano/mod/{bpId}")
+	public String anoModPage(@PathVariable("bpId")String bpId, Model model) {
+		BoardPostVO ano = service.retrieveAno(bpId);
+		model.addAttribute("ano", ano);
+		return "admin/anoboard/adminAnoMod";
+	}
+	
+	@DeleteMapping("ano/del/{bpId}")
+	public String anoDelController(@PathVariable("bpId") String bpId,Model model) {
+		log.info("bpId : {}",bpId);
+		int cnt = service.removeAno(bpId);
+		if(cnt>0) {
+			model.addAttribute("msg", "ok");
+		}else {
+			model.addAttribute("msg", "fail");
+		}
+		return "jsonView";
+	}
+	
+	@PutMapping("ano/put")
+	public String anoPutController(@RequestBody BoardPostVO vo,Model model,@RealUser EmpVO realUser) {
+		log.info("vo : {}",vo);
+		
+		if(vo!=null) {
+			int cnt = service.modifyAno(vo,realUser.getEmpId());
+			if(cnt>0) {
+				model.addAttribute("msg", "ok");
+			}else {
+				model.addAttribute("msg", "fail");
+			}
+			
+		}else {
+			model.addAttribute("msg", "empty");
+		}
+		return "jsonView";
+	}
+	
+
+}

@@ -1,0 +1,28 @@
+package kr.or.navi.projectdetail.gantt.service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.navi.projectdetail.gantt.dao.TaskGanttDAO;
+import kr.or.navi.projectdetail.gantt.vo.GanttEventVO;
+
+@Service
+public class GanttService {
+	@Inject
+	public TaskGanttDAO dao;
+	
+	public List<GanttEventVO> getGanttEventList() {
+		List<GanttEventVO> list = dao.selectTaskList().stream().map(tv->new GanttEventVO(tv)
+		).collect(Collectors.toList());
+		int cnt=0;
+		for(GanttEventVO vo :list) {
+			vo.setIdx(cnt);
+			cnt++;
+		}
+		return list;
+	}
+}

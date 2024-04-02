@@ -1,0 +1,16 @@
+package kr.or.navi.vo;
+
+import java.io.Serializable;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(of="wfId")
+public class WikiFileVO implements Serializable{
+	private String wfId;
+	private String wikiId;
+	private String wkFileGbId;
+	private String wfAttchFile;
+	private String wfOrgNm;
+}

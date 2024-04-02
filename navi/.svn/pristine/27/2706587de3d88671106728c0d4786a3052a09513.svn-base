@@ -1,0 +1,12 @@
+package kr.or.navi.board.share.service;
+
+import java.util.List;
+
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.vo.BoardPostVO;
+
+public interface ShareService {
+
+	public List<BoardPostVO> retrieveShareList(PaginationInfo paging);
+	public BoardPostVO retrieveShare(String bpId);
+}

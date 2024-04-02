@@ -1,0 +1,17 @@
+package kr.or.navi.vo;
+
+import java.io.Serializable;
+import java.util.List;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(of="proId")
+public class TeamVO implements Serializable{
+	private String proId;
+	private String empId;
+	private String roleId;
+	private String teamYn;
+	private EmpVO emp;
+}

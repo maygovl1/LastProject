@@ -1,0 +1,278 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+                               
+<form method="POST" id="transForm">
+<!--    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#transmodal">번역모달</button> -->
+   <div class="modal fade" id="transmodal" tabindex="-1" aria-labelledby="transModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+         <div class="modal-content">
+            <div class="modal-header">
+               <h5 class="modal-title" id="transModalLabel">NAVIMINE 번역</h5>
+               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                  <div class="row mb-3">
+                     <div class="col-md-6">
+                        <select class="form-select" name="source" id="fromLanguage">
+                           <option value="ko">한국어</option>
+                           <option value="en">영어</option>
+                           <option value="ja">일본어</option>
+                           <option value="zh-CN">중국어간체</option>
+                           <option value="zh-TW">중국어번체</option>
+                           <option value="vi">베트남어</option>
+                           <option value="th">태국어</option>
+                           <option value="id">인도네시아어</option>
+                           <option value="fr">프랑스어</option>
+                           <option value="es">스페인어</option>
+                           <option value="ru">러시아어</option>
+                           <option value="de">독일어</option>
+                           <option value="it">이탈리아어</option>
+                           <option value="pt">포르투갈어</option>
+                           <option value="hi">힌디어</option>
+                        </select>
+                     </div>
+                     <div class="col-md-6">
+                        <select class="form-select" name="target" id="toLanguage">
+                           <option value="en">영어</option>
+                           <option value="ko">한국어</option>
+                           <option value="ja">일본어</option>
+                           <option value="zh-CN">중국어간체</option>
+                        </select>
+                     </div>
+                  </div>
+                  <div class="row mb-3">
+                     <div class="col-md-6">
+                        <label for="inputText" class="form-label"></label>
+                        <textarea class="form-control-transin" name="text" id="inputText" placeholder="번역하고자하는 내용을 입력하세요."></textarea>
+                     </div>
+                     <div class="col-md-6">
+                        <label for="outputText" class="form-label"></label>
+                        <textarea class="form-control-transout" id="outputText" placeholder="번역된 내용이 나옵니다."></textarea>
+                     </div>
+                  </div>
+                  <div class="text-center mb-3">
+                     <button type="button" class="btn btn-primary" id="transBtn">번역하기</button>
+                  </div>
+                  <div id="output" class="mt-3"></div>
+            </div>
+            <div class="modal-footer">
+               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            </div>
+         </div>
+      </div>
+   </div>
+</form>  
+<script>
+$(document).ready(function(){
+    $("#fromLanguage").on("mousedown", function(e) {
+        e.preventDefault();
+    });
+    $("#fromLanguage").on("keydown", function(e) {
+        e.preventDefault();
+    });
+	let typingTimeout;
+	 function getCsrfToken(){
+	      return document.querySelector('meta[name="_csrf"]').getAttribute('content');
+	   }
+	   function getCsrfHeader(){
+	      return document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+	   }
+	$(transBtn).on("click",function(){
+		let formData = new FormData(transForm);
+		let qs = new URLSearchParams(formData);
+		fetch(document.body.dataset.contextPath+"/trans?"+qs,{
+			method:"GET",
+			headers:{
+				"Accept":"application/json",
+		         [getCsrfHeader()]: getCsrfToken()
+			}
+		}).then(resp=>{
+			if(resp.ok){
+				return resp.json();
+			}else{
+				throw new Error(`상태코드 ${resp.status} 수신`,{cause:resp})
+			}
+		}).then(jsonObj=>{
+			data = JSON.parse(jsonObj.body);
+			let trans=data["message"]["result"]["translatedText"];
+			$(outputText).val(trans)
+		}).catch(err=>{
+			console.error(err);
+			$(outputText).val("해당 언어의 번역기가 존재하지 않습니다.")
+		})
+		
+	})
+	function handleInput() {
+		fetch(document.body.dataset.contextPath+"/lang?text="+$(inputText).val(),{
+			method:"GET",
+			headers:{
+				"Accept":"application/json"
+			}
+		}).then(resp=>{
+			if(resp.ok){
+				return resp.json();
+			}else{
+				throw new Error(`상태코드 ${resp.status} 수신`,{cause:resp})
+			}
+		}).then(jsonObj=>{
+			console.log(jsonObj["body"])
+				data = JSON.parse(jsonObj["body"]);
+				console.log(data)
+				 $(fromLanguage).val(data.langCode);
+		}).catch(err=>{
+			console.error(err);
+		})
+	}
+	$(inputText).on("blur",()=>{
+		console.log(1111)
+		clearTimeout(typingTimeout);
+		typingTimeout = setTimeout(handleInput, 300);
+	})
+	
+})
+</script>    
+                       
+    
+
+    
+<!-- QUICK -->
+    	<%-- quick --%>
+	<div class="quick-box" id="qickScroll">
+		<ul class="ul quick-conbox clearfix">
+		  <li>
+			<a href="${pageContext.request.contextPath}/quick/img" class="btn btn1">
+			  <span class="icon imageAPI"></span><span class="txt">이미지</span>
+			</a>
+		  </li>
+		  <li>
+			<a href="#" data-bs-toggle="modal" data-bs-target="#transmodal" class="btn btn2">
+			  <span class="icon translation"></span><span class="txt">번역</span>
+			</a>
+		  </li>
+		  
+		  <li>
+			<a href="${pageContext.request.contextPath}/quick/cert" class="btn btn3">
+			  <span class="icon license"></span><span class="txt">자격증</span>
+			</a>
+		  </li>
+		  
+<!-- 		  <li> -->
+<!-- 			<a href="javascript:void(0);" class="btn btn3" onclick="openCertModal()">  -->
+<!-- 			<span class="icon license"></span><span class="txt">자격증</span> -->
+<!-- 			</a> -->
+<!-- 		  </li> -->
+		  
+		  <li>
+			<a href="${pageContext.request.contextPath}/quick/book" class="btn btn4">
+			  <span class="icon book"></span><span class="txt">도서</span>
+			</a>
+		  </li>
+		  <li>
+			<a href="${pageContext.request.contextPath}/quick/news" class="btn btn5">
+			  <span class="icon news"></span><span class="txt">뉴스</span>
+			</a>
+		  </li>
+		  <li>
+			<a href="${pageContext.request.contextPath}/quick/vac" class="btn btn6">
+			  <span class="icon tourplace"></span
+			  ><span class="txt">휴양지</span>
+			</a>
+		  </li>
+		  <li>
+			<a href="${pageContext.request.contextPath}/quick/food" class="btn btn7">
+			  <span class="icon food"></span><span class="txt">음식</span>
+			</a>
+		  </li>
+		  
+			<!-- 메일 -->
+			<li><a href="${pageContext.request.contextPath}/mail" class="btn btn8"> <span class="icon mail"></span><span
+					class="txt">메일</span>
+			</a></li>
+			<!-- 메일 -->
+			<!-- 졸음방지알림 -->
+			<li>
+				<button type="button" class="btn btn9" data-bs-toggle="modal" data-bs-target="#wakeupModal">
+					 <span class="icon wakeup"></span>
+					 <span class="txt">졸음방지</span>
+				 </button>
+			</li>
+			<!-- 졸음방지알림 -->
+			<!-- 마이페이지 -->
+			<li><a href="${pageContext.request.contextPath}/mypage" class="btn btn10"> <span class="icon mypage"></span><span
+					class="txt">Mypage</span>
+			</a></li>
+			<!-- 마이페이지 -->
+			<!-- 프로그램가이드 -->
+			<li>
+				<a href='${pageContext.request.contextPath }/prog' class="btn btn11" target="_blank" title="새창열림"> <span class="icon prog"></span><span
+		class="txt">프로그램<br>가이드</span>
+				</a>
+			</li>
+			<!-- 프로그램가이드 -->
+		 
+		</ul>
+	  </div>
+	<%-- quick --%>
+    
+    
+<%-- footer --%>
+    <footer id="footer" class="footer clearfix">
+        <div class="footer-inner d-flex">
+            <div class="box left">
+                <em class="footer_logo">
+                    삼국지
+                </em>
+           <ul class="footer_ul clearfix">
+                    <li class="li">
+                    	<a href="">유길상</a>
+                    	<div class="roleTooltip">
+                    		백엔드 종결자, 길상이와 어른들
+                    	</div>
+                    </li>
+                    <li class="li">
+                    	<a href="">이상철</a>
+                    	<div class="roleTooltip">
+                    		발표 종결자, 상철이와 어른들 
+                    	</div>
+                    </li>
+                    <li class="li">
+                    	<a href="">정민지</a>
+                    	<div class="roleTooltip">
+                    		만능키, 그냥 다 잘해...엄청 똑똑해요!
+                    	</div>
+                    </li>
+                    <li class="li">
+                    	<a href="">김태은</a>
+                    	<div class="roleTooltip">
+                    	 	하기나 해  p.s gray shake it! 
+                    	</div>
+                    </li>
+                    <li class="li">
+                   		 <a href="">우민규</a>
+                   		 <div class="roleTooltip">
+                    		노력 종결자, 미래유망주
+                    	</div>
+                    </li>
+                </ul> 
+                <p class="copyright">Copyright 2024 SKJ.All Rights Reserved.</p>
+            </div>
+
+            <div class="box right">
+                <ul class="footer_ul clearfix">
+                    <li class="li"><span class="icon python">
+                        <span class="sr-only">python</span>
+                    </span></li>
+                    <li class="li"><span class="icon java">
+                        <span class="sr-only">java</span>
+                    </span></li>
+                    <li class="li"><span class="icon js">
+                        <span class="sr-only">node JS</span>
+                    </span></li>
+                 
+                </ul>
+              
+        </div>
+    </footer>
+    <script src="${pageContext.request.contextPath}/resources/js/footer.js"></script>
+    
+<%-- footer --%>

@@ -1,0 +1,102 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
+
+<!-- form  -->
+<form id="searchForm">
+	<input type="hidden" name="page" /> <input type="hidden" name="state"
+		value="${paging.detailCondition.state }" /> <input type="hidden"
+		name="brdId" value="${paging.detailCondition.brdId }" /> <input
+		type="hidden" name="searchWord"
+		value="${paging.detailCondition.searchWord }" />
+</form>
+<!-- form  -->
+
+<!-- searchBar -->
+<div data-pg-role="searchUI" data-pg-target="#searchForm"
+	class="searchBox d-flex justify-content-end">
+	<!-- 입력용도 UI  -->
+	<select class="me-1" name="state"
+		data-pg-init-value="${paging.detailCondition.state}">
+		<option value=""
+			${empty paging.detailCondition.state ? 'selected' : ''}>전체</option>
+		<option value="ing"
+			${paging.detailCondition.state == 'ing' ? 'selected' : ''}>진행중</option>
+		<option value="end"
+			${paging.detailCondition.state == 'end' ? 'selected' : ''}>삭제</option>
+	</select> <select class="me-1" name="brdId"
+		data-pg-init-value="${paging.detailCondition.brdId }">
+		<option value>분류선택</option>
+		<c:forEach items="${boardTypeList }" var="brd">
+			<option value="${brd.cmId }">${brd.cmName }</option>
+		</c:forEach>
+	</select>
+
+	<div class="fieldset flex">
+		<input class="me-1" type="text" name="searchWord"
+			data-pg-init-value="${paging.detailCondition.searchWord }"
+			title="검색어를 입력해주세요" placeholder="검색어를 입력해주세요" />
+		<button type="button" class="btn btn-primary" data-pg-role="searchBtn">검색</button>
+	</div>
+</div>
+<!-- searchBar -->
+
+<!-- ui : table s -->
+<table class="table text-center">
+	<caption class="sr-only">게시판 목록 테이블입니다.</caption>
+
+	<colgroup>
+		<col style="width: 8%">
+		<col style="width: 10%">
+		<col style="width: auto">
+		<col style="width: 10%">
+		<col style="width: 10%">
+		<c:if test="${paging.detailCondition.state != 'ing'}">
+			<col style="width: 10%;">
+		</c:if>
+	</colgroup>
+
+	<thead>
+		<tr>
+			<th scope="col">번호</th>
+			<th scope="col">게시판명</th>
+			<th scope="col">제목</th>
+			<th scope="col">작성자</th>
+			<th scope="col">작성일</th>
+			<c:if test="${paging.detailCondition.state != 'ing'}">
+				<th scope="col">삭제일</th>
+			</c:if>
+		</tr>
+	</thead>
+
+	<c:forEach items="${boardList }" var="brdlist">
+		<tbody>
+			<!-- 일반 -->
+			<tr>
+
+				<td>${brdlist.rnum }</td>
+				<td>${brdlist.cmName}</td>
+				<td class="text-start">
+					<!-- 새글일 때 new 클래스 추가 --> <a
+					href="${pageContext.request.contextPath }/board/${brdlist.cmAtt1 }/${brdlist.bpId}"
+					class="text-link d-flex new"> <!-- icon new_icon 추가 --> <span
+						class="icon new_icon"> <span class="sr-only">new</span>
+					</span> <em class="text-elipsis">${brdlist.bpTitle}</em>
+				</a>
+				</td>
+				<td>${brdlist.empName }</td>
+				<td>${brdlist.bpRegDtStr }</td>
+				<c:if test="${paging.detailCondition.state != 'ing'}">
+					<td>${brdlist.bpDelDtStr }</td>
+				</c:if>
+			</tr>
+			<!-- 일반 -->
+	</c:forEach>
+	</tbody>
+
+</table>
+
+${pagingHTML }
+<script src="<c:url value='/resources/js/common/paging.js'/>"></script>

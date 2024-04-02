@@ -1,0 +1,21 @@
+package kr.or.navi.chat.web.dao;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import kr.or.navi.vo.ChatRoomVO;
+import kr.or.navi.vo.ChatUserVO;
+import kr.or.navi.vo.EmpVO;
+
+@Mapper
+public interface ChatDAO {
+
+	public List<EmpVO> selectChatEmpList(@Param("empId") String empId);
+	public List<ChatUserVO> selectChatList(@Param("empId") String empId);
+	
+	public String createPrivateRoom(ChatRoomVO roomVO); 
+	public int addChatUser(@Param("roomId") String roomId, @Param("empId") String empId);
+	
+}

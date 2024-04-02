@@ -1,0 +1,172 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
+
+<div id="cstmrList" data-list>
+	<div class="chat_top point_bg">
+		<button class="btn close ">
+			<i class="icon left_arrow"></i> <em class="sr-only">채팅숨기기</em>
+		</button>
+		<form name="usersForm">
+			<input type="hidden" id="roomId" name="roomId" />
+			<input type="hidden" id="username" name="username" /> <br />
+		</form>
+
+			<!-- 검색 -->
+			<div class="chat_search">
+				<form id="chatForm"
+					action="${pageContext.request.contextPath }/chat/chatEmpList"
+					method="post">
+					<div class="input-group">
+						<input
+							class="form-control form-control-sm shadow-none search search_input"
+							type="search" placeholder="Search..." aria-label="search" />
+						<div class="input-group-text bg-transparent search_btn">
+							<span class="fa fa-search fs-10 text-600"></span>
+						</div>
+					</div>
+				</form>
+			</div>
+			<!-- 검색 -->
+	</div>
+	<div class="flex-container font mt-3 me">
+		<div class="dropdown">
+			<img class="empImg radius-img dropdown-toggle"
+				src="${pageContext.request.contextPath}/resources/images/prog/navi.jpg"
+				alt="프로필" id="dropdownMenuButton" aria-haspopup="true"
+				aria-expanded="false">
+			<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+				<a class="dropdown-item status_btn open" href="#"><i
+					class="icon online radius-img"></i> <span class="text">온라인</span></a> <a
+					class="dropdown-item status_btn open" href="#"><i
+					class="icon silent radius-img"></i> <span class="text">방해금지</span></a>
+				<a class="dropdown-item status_btn open" href="#"><i
+					class="icon empty radius-img"></i> <span class="text">자리비움</span></a>
+				<a class="dropdown-item status_btn open" href="#"><i
+					class="icon offline radius-img"></i> <span class="text">오프라인</span></a>
+			</div>
+		</div>
+		<c:set var="username" value="${realUser.empName}" />
+		<span class="empOne">${realUser.empName }${realUser.psName }(${realUser.deptName })</span>
+	</div>
+	<div class="chat_list content scrollbar" id="users" name="users">
+		<!-- 리스트 시작 -->
+		<ul class="list" id="listBody">
+			<li class="font text-start mb-3 popup">
+				<div class="flex-container">
+					<div class="empImg"></div>
+					<span class="empOne"></span>
+				</div>
+			</li>
+		</ul>
+		<!-- 리스트 종료 -->
+	</div>
+</div>
+<div class="chat_bottom">
+	<button class="empList">
+		<i class="icon list"></i> <em class="txt">사원목록</em>
+	</button>
+	<button class="chatList">
+		<span class="txt">채팅목록</span> <i class="icon chat_bubble"></i>
+	</button>
+</div>
+
+<script>
+	var webSocket = null;
+
+	$(document).ready(function() {
+		var url = 'ws://' + window.location.host + '/navi/usersServerEndpoint';
+		webSocket = connection(url);
+
+		webSocket.onopen = function() {
+			processOpen();
+		};
+		webSocket.onmessage = function(message) {
+			processMessage(message);
+		};
+	});
+
+	function connection(url) {
+		var webSocket = null;
+		if ('WebSocket' in window) {
+			webSocket = new WebSocket(url);
+		} else if ('MozWebSocket' in window) {
+			webSocket = new MozWebSocket(url);
+		} else {
+			console.error('Error: WebSocket is not supported by this browser.');
+			return null;
+		}
+		return webSocket;
+	}
+
+	function processOpen() {
+		console.log("WebSocket 연결됨");
+		connectionType = "firstConnection";
+		username = "${username}";
+		console.log(username);
+		webSocket.send(JSON.stringify({
+			"connectionType" : connectionType,
+			"username" : username
+		}));
+	}
+
+	// 서버에서 메시지가 넘어왔을 때 처리하는 함수
+	function processMessage(message) {
+	    // 서버에서 전송한 메시지를 JSON 형식으로 파싱합니다.
+	    var jsonData = JSON.parse(message.data);
+	    
+	    // 만약 서버로부터 받은 메시지에 채팅방 ID가 포함되어 있다면,
+	    if (jsonData.roomId) {
+	        // 선택한 사람의 roomId를 가져옵니다.
+	        var selectedRoomId = $(".popup").find('.dataa').data("room-id");
+	        var selectedEmpId = $(".popup").find('.dataa').data("emp-id");
+	        
+	        // 서버에서 받은 roomId와 사용자가 선택한 사람의 roomId를 비교하여 대화 상대의 대화창을 엽니다.
+	        if (selectedRoomId === jsonData.roomId) {
+	        	console.log("selectedRoomId", selectedRoomId);
+	        	console.log("selectedEmpId", selectedEmpId);
+	            openChatRoom(selectedRoomId);
+	        }
+	    }
+	}
+	
+	$(document).ready(function() {
+	    // 기존 코드 생략
+
+	    // li.popup 요소에 대한 클릭 이벤트 처리기 추가
+	    $(document).on("click", "li.popup", function() {
+	        // 클릭된 li 요소 내에서 roomId 데이터를 가져옵니다.
+	        var roomId = $(this).find('.dataa').data("room-id");
+	        var empId = $(this).find('.dataa').data("emp-id");
+        	console.log("empId", empId);
+        	console.log("roomId", roomId);
+	        // 대화 상대의 대화창을 엽니다.
+	        openChatRoom(roomId);
+	    });
+	});
+	
+	// 채팅방을 팝업으로 열기 위한 함수
+	function openChatRoom(roomId) {
+	    // 팝업 창 옵션 설정
+	    var popOptions = "width=500, height=700, resizable=yes, status=no, scrollbar=yes";
+	    // 채팅방 열기를 요청하는 URL 설정
+	    var url = "<c:url value='/chat/chatRoom'/>";
+	    // 채팅방 열기를 요청하고 팝업 창을 엽니다.
+	    popupPost(url + "?roomId=" + roomId, "chatRoomPopup", popOptions);
+	}
+
+	// 팝업 창을 열기 위한 함수
+	function popupPost(url, target, option) {
+	    // 팝업 창 열기
+	    window.open(url, target, option);
+	}
+
+	window.onbeforeunload = function() {
+		if (webSocket) {
+			webSocket.close();
+			console.log("WebSocket 연결 닫힘");
+		}
+	};
+</script>

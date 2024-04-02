@@ -1,0 +1,60 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>웹캠 영상 전송</title>
+</head>
+<body>
+    <h1>웹캠 영상 전송</h1>
+    <video id="webcam" width="640" height="480" autoplay></video>
+	<audio id="audio" src="" type="audio/mpeg"> </audio>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
+<script>
+    // Socket.IO 클라이언트 설정
+    const socket = io('http://192.168.141.24:5000');
+
+    socket.on('play_sound', function(data) {
+    	console.log("data", data);
+    	console.log("data.url", data.url);
+        var audio = document.getElementById('audio');
+        // 소리 재생을 위한 URL 설정
+        audio.src = data.url;
+        // 소리 재생
+        audio.play();
+    });
+    
+    socket.on('stop_sound', function(data) {
+    	console.log("data", data);
+    	console.log("data.url", data.url);
+        var audio = document.getElementById('audio');
+        audio.src = data.url;
+        audio.pause();
+    });
+    
+    // 웹캠 스트림 가져오기
+    navigator.mediaDevices.getUserMedia({ video: true })
+    .then(function(stream) {
+        var video = document.getElementById('webcam');
+        video.srcObject = stream;
+
+        // 캔버스 생성
+        var canvas = document.createElement('canvas');
+        var context = canvas.getContext('2d');
+
+        // 웹캠 영상을 실시간으로 서버로 전송
+        setInterval(function() {
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(function(blob) {
+                socket.emit('webcam_data', blob);
+                console.log('웹캠 데이터를 서버로 전송했습니다.');
+            }, 'image/jpeg');
+        }, 1000); // 필요에 따라 간격 조정
+    })
+    .catch(function(error) {
+        console.error('웹캠 접근 에러:', error);
+    });
+</script>
+</body>
+</html>

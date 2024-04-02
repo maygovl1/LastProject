@@ -1,0 +1,18 @@
+package kr.or.navi.vo;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(of="biId")
+public class BookmarkIssueVO implements Serializable{
+	private String biId;
+	private String issueId;
+	private String empId;
+	private String proId;
+	private LocalDateTime biRegDt;
+	private LocalDateTime biDelDt;
+}

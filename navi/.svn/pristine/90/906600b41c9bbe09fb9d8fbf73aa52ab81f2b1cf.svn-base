@@ -1,0 +1,23 @@
+package kr.or.navi.mypage.service;
+
+import java.util.List;
+
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.enumpkg.ServiceResult;
+import kr.or.navi.vo.BoardPostVO;
+import kr.or.navi.vo.BookmarkVO;
+import kr.or.navi.vo.EmpVO;
+import kr.or.navi.vo.IssueVO;
+import kr.or.navi.vo.ProjectVO;
+
+public interface MypageService {
+	public EmpVO selectOne(String empId);
+	public ServiceResult modifyEmp(EmpVO vo);
+	public List<ProjectVO> myProjectList(String empId, PaginationInfo paging);
+	public List<IssueVO> myIssueList(String empId, PaginationInfo paging);
+	public List<BoardPostVO> myBoardList(String empId, PaginationInfo paging);
+	public List<BookmarkVO> bookmarkList(String empId);
+	
+	public int createIssueBookmark(BookmarkVO vo);
+	public int createBoardBookmark(BookmarkVO vo);
+}

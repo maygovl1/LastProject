@@ -1,0 +1,19 @@
+package kr.or.navi.vo;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(of="wikiId")
+public class WikiVO implements Serializable{
+	private String wikiId;
+	private String proId;
+	private String wikiTitle;
+	private String wikiCn;
+	private LocalDateTime wikiRegDt;
+	private LocalDateTime wikiModDt;
+	private LocalDateTime wikiDelDt;
+}

@@ -1,0 +1,40 @@
+package kr.or.navi.vo;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(of="bpId")
+public class BoardPostVO implements Serializable{
+	private int rnum;
+	private int boNo;
+	private String bpId;
+	private String empId;
+	private String bpModId;
+	private String brdId;
+	private String bpTitle;
+	private String bpCn;
+	private LocalDateTime bpRegDt;
+	private LocalDateTime bpDelDt;
+	private String bpOpYn;
+	private Integer bpCnt;
+	private LocalDateTime bpModDt;
+	private String bpShrYn;
+	private String bpNtcId;
+	private String empName;
+	
+	private EmpVO emp;
+	
+	public String getBpRegDtStr(){
+		if(bpRegDt!=null)
+		return bpRegDt.format(DateTimeFormatter.ISO_DATE);
+
+		return null;
+	}
+	
+
+}

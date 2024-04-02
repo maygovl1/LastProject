@@ -1,0 +1,77 @@
+package kr.or.navi.quick.food.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.navi.quick.food.service.FoodService;
+import kr.or.navi.quick.food.vo.FoodVO;
+import kr.or.navi.security.RealUser;
+import kr.or.navi.vo.EmpVO;
+import kr.or.navi.vo.WeatherVO;
+import kr.or.navi.weather.service.WeatherService;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequestMapping("/quick/food")
+@Controller
+public class FoodRecomController {
+	
+	@Inject
+	FoodService service;
+
+	@Inject
+	WeatherService weather;
+	
+	@GetMapping()
+	public String foodPage(Model model) {
+	
+		List<FoodVO> foodList = service.selectFoodsList();
+		model.addAttribute("foodList",foodList);
+		return "quick/foodList";
+	}
+	
+	@GetMapping("test")//비동기,동기요청을받을 주소
+	public String recomFoodList(@RealUser EmpVO vo ,Model model) {
+		String weatherType = weather.selectCurWeather().getWeatherType();
+		List<FoodVO> recomList = service.recomFoodList(vo, weatherType);
+		model.addAttribute("recomList",recomList);
+		return "quick/food"; // 실제로 데이터를 받을 뷰?
+	}
+	
+	//food 상세조회
+	@GetMapping("{foodId}")
+	public String foodDatail(@RealUser EmpVO vo,@PathVariable String foodId,Model model) {
+		
+		
+		log.info("weather.selectWeatherList():{}",weather.selectWeatherList());
+		
+		String empId = vo.getEmpId();
+		String weatherId = weather.selectCurWeather().getWeatherId();
+		FoodVO foodInfo = service.selectOne(foodId);
+		log.info("empId",empId);
+		log.info("weatherId",weatherId);
+		log.info("foodInfo",foodInfo);
+		log.info("service.insertFoodViews(empId, foodId, weatherId) :{}",service.insertFoodViews(empId, foodId, weatherId));
+		
+		model.addAttribute("foodId",foodId);
+		model.addAttribute("foodInfo",foodInfo);
+		
+		return "quick/foodDetail";//뷰 jsp로 반환
+	}
+	
+	
+	
+	
+
+	
+}

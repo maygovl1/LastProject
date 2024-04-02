@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.navi.todaylist.dao.TodayListDAO">
+
+<!-- 일  -->
+
+<resultMap type="TodayListVO" id="todayListMap" autoMapping="true">
+	    <association property="task" javaType="TaskVO" autoMapping="true">
+	    	<id property="taskId" column="TASK_ID" />
+	    </association>
+	    <association property="emp" javaType="EmpVO" autoMapping="true">
+	    	<id property="empId" column="EMP_ID" />
+	    </association>
+	    <!-- project 변수의 매핑 -->
+	    <association property="project" javaType="ProjectVO" autoMapping="true">
+	    	<id property="proId" column="PRO_ID"/>
+	    </association>
+	    <!-- project 변수의 매핑 -->
+	    <!-- taskStatusVO mapping : -->
+	    <association property="taskStatus" javaType="TaskStatusVO" autoMapping="true">
+			<id property="tsId" column="TS_ID"/>
+		</association>
+	    <!-- task status 변수의 매핑 -->
+	    <!-- taskProcessStatus -->
+	     <association property="taskProcessStatus" javaType="TaskProcessStatusVO" autoMapping="true">
+			<id property="tpsId" column="TPS_ID"/>
+		</association>
+	    <!-- taskProcessStatus -->
+</resultMap>
+	<!-- 1) 일감목록 조회 쿼리 -->
+	<select id="selectTotalRecord">
+			WITH C AS (
+			    SELECT 
+			        TL.TL_IDX,
+			        TL.TL_REG_DT,
+			        TL.TASK_ID,
+			        TL.EMP_ID,
+			        E.EMP_NAME,
+			        TSK.TS_ID,
+			        TSK.PRO_ID,
+			        TSK.TASK_TITLE,
+			        TSK.TPS_ID,
+			        TSK.TASK_MAN_ID,
+			        TSK.TASK_REG_DT,
+			        TSK.TASK_COMP_DT,
+			        TS.TS_NAME,
+			        TPS.TPS_NAME,
+			        TPS.TPS_ING,
+			        TPS.TPS_DESC,
+			        PRO.PRO_NAME
+			    FROM 
+			        TODAY_LIST TL
+			        JOIN EMP E ON TL.EMP_ID = E.EMP_ID
+			        JOIN TASK TSK ON TL.TASK_ID = TSK.TASK_ID
+			        JOIN TASK_STATUS TS ON TS.TS_ID = TSK.TS_ID
+			        JOIN TASK_PROCESS_STATUS TPS ON TPS.TPS_ID = TSK.TPS_ID
+			        JOIN PROJECT PRO ON PRO.PRO_ID = TSK.PRO_ID
+			)
+			SELECT COUNT(*)
+			FROM C
+			WHERE C.EMP_ID = 'E00001'
+			ORDER BY C.TL_IDX
+	</select>
+	
+	<select id="selectTaskList" resultMap="todayListMap" parameterType="PaginationInfo">
+			WITH C AS (
+			    SELECT 
+			        TL.TL_IDX,
+			        TL.TL_REG_DT,
+			        TL.TASK_ID,
+			        TL.EMP_ID,
+			        E.EMP_NAME,
+			        TSK.TS_ID,
+			        TSK.PRO_ID,
+			        TSK.TASK_TITLE,
+			        TSK.TPS_ID,
+			        TSK.TASK_MAN_ID,
+			        TSK.TASK_REG_DT,
+			        TSK.TASK_COMP_DT,
+			        TS.TS_NAME,
+			        TPS.TPS_NAME,
+			        TPS.TPS_ING,
+			        TPS.TPS_DESC,
+			        PRO.PRO_NAME
+			    FROM 
+			        TODAY_LIST TL
+			        JOIN EMP E ON TL.EMP_ID = E.EMP_ID
+			        JOIN TASK TSK ON TL.TASK_ID = TSK.TASK_ID
+			        JOIN TASK_STATUS TS ON TS.TS_ID = TSK.TS_ID
+			        JOIN TASK_PROCESS_STATUS TPS ON TPS.TPS_ID = TSK.TPS_ID
+			        JOIN PROJECT PRO ON PRO.PRO_ID = TSK.PRO_ID
+			)
+			SELECT *
+			FROM C
+			WHERE C.EMP_ID = 'E00001'
+			ORDER BY C.TL_IDX
+	
+	</select>
+
+	<!-- 2) 오늘의 일정 예상시간, 소요시간, 작업상태 업데이트 쿼리 -->
+	<!-- 3) 오늘의 일정 조회 쿼리 -->
+</mapper>

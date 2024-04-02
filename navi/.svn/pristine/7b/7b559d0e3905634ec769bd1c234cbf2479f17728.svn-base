@@ -1,0 +1,16 @@
+package kr.or.navi.board.share.dao;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.vo.BoardPostVO;
+
+@Mapper
+public interface ShareDAO {
+	public List<BoardPostVO> selectShareList(PaginationInfo paging);
+	public int totalRecord(PaginationInfo paging);
+	public BoardPostVO selectShare(@Param("bpId") String bpId);
+}

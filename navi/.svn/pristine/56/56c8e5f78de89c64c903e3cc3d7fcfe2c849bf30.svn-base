@@ -1,0 +1,53 @@
+package kr.or.navi.common.interceptor;
+
+import java.security.Principal;
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+import kr.or.navi.mapper.dao.EmpDAO;
+import kr.or.navi.project.dao.ProjectDAO;
+import kr.or.navi.project.dao.TeamDAO;
+import kr.or.navi.vo.EmpVO;
+import kr.or.navi.vo.TeamVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class AdminDetailInterceptor implements HandlerInterceptor {
+	@Inject
+	private EmpDAO mapper;
+	@Inject
+	private ProjectDAO proDao;
+
+	@Inject
+	private TeamDAO teamDao;
+
+	@Override
+	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+			throws Exception {
+		Principal user = request.getUserPrincipal();
+		EmpVO realUser = mapper.selectOne(user.getName());
+		String requestURI = request.getRequestURI();
+		log.info("requestURI : {}", requestURI);
+		String[] split = requestURI.split("/");
+		boolean f = false;
+		if(requestURI.contains("/admin")) {
+			if(realUser.isAdmin()) {
+				return HandlerInterceptor.super.preHandle(request, response, handler);
+				
+			}else {
+				request.getSession().setAttribute("contMsg", "접근할 수 없습니다.");
+				response.sendRedirect(request.getContextPath());
+				return false;
+			}
+		}
+		request.getSession().setAttribute("contMsg", "접근할 수 없습니다.");
+		response.sendRedirect(request.getContextPath());
+		return false;
+	}
+}

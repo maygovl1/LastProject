@@ -1,0 +1,203 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core"  prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags/form"  prefix="form"%>
+<%@ taglib uri="http://www.springframework.org/tags"  prefix="spring"%>
+
+
+<div class="info_box red">
+<strong><i class="info"></i>사용안내</strong>
+<ul class="ul bullet mt-3">
+    <li class="li mb-1">
+        당일 작업을 진행할 프로젝트의 일감만 등록해주세요.
+    </li>
+    <li class="li mb-3">
+       작업이 진행되지 못할 경우, 미진행 또는 대기로 작업상태를 설정해주세요.
+    </li>
+    <li class="li indent mb-2">
+       <span class="">- 일정 등록</span>
+       <ul class="ul">
+            <li class="li">
+                추가로 작업할 일감을  조회 후 선택해 가져 온 후 ,  완료버튼을 눌러 반영해주세요. 
+            </li>
+       </ul>
+    </li>
+    <li class="li indent">
+        <span class="">- 작업시간 및 기타 설정</span>
+        <ul class="ul">
+             <li class="li">
+                작업시간 및 기타 내용 입력  후, 완료버튼을 눌러 반영해주세요. 
+             </li>
+        </ul>
+     </li>
+</ul>
+
+
+</div>
+
+
+<div class="toDo_list mt-5">
+
+        <div class="todo_content clearfix">
+			<div class="todo_title float-start mt-2">
+                <i class="icon date"></i>
+                <span class="date-text GmarketSans fw-bold">2024-03-07 목요일</span>
+            </div>
+			<div class="btn-box clearfix">
+				<div class="right float-end">
+                    <button class="btn btn-primary me-2">조회</button>
+					<button class="btn btn-danger  me-2">삭제</button>
+                    <button class="btn btn-custom">완료</button> 
+				</div>
+            </div>
+
+            <!-- ui : table s -->
+			<table class="table text-center">
+				<caption class="sr-only">일감목록 테이블입니다.</caption>
+				<colgroup>
+					<col style="width:5%">
+					<col style="width: 8%;">
+					<col style="width: 10%;">
+					<col style="width: 10%;">
+					<col style="width: auto;">
+					<col style="width: 10%;">
+					<col style="width: 10%;">
+					<col style="width: 10%;">
+				</colgroup>
+
+				<thead>
+					<tr>
+						<th>
+							<input type="checkbox">
+						</th>
+						<th scope="col">번호</th>
+						<th scope="col">일감ID</th>
+						<th scope="col">상태</th>
+						<th scope="col">제목</th>
+						<th scope="col">마감일</th>
+						<th scope="col">예상시간</th>
+						<th scope="col">완료시간</th>
+                        <th scope="col">작업상태</th>
+					</tr>
+				</thead>
+				<tbody>
+						<!-- 일반 -->
+						<tr>
+							<th>
+								<input type="checkbox" name="">
+							</th>
+							<th scope="row">1</th>
+							<th scope="row">T00003</th>
+							<td>
+								<span class="category ordinary">일반</span>
+							</td>
+							<td class="text-start">
+								<!-- 새글일 때 new 클래스 추가 -->
+								<a href="#" class="text-link d-flex new">
+									<!-- icon new_icon 추가 -->
+									<span class="icon new_icon">
+										<span class="sr-only">new</span>
+									</span>
+									<em class="text-elipsis">일감이다  일감일다 일감임어ㅣㄴㅇ마러;ㄴㅇ마ㅣㄻㄴ이ㅏㄼㄷ;ㅐㅑ롣ㅈㅁㄴㅇ라ㅐㅕㅁㄴ;ㅣㅇ렁ㄴ마ㅣ;ㄹ</em>
+								</a>
+							</td>
+							<td>2024.03.01</td>
+							<td><input type="text" class="form-control" placeholder="예상시간" name=""></td>
+							<td><input type="text" class="form-control" placeholder="완료시간" name=""></td>
+                            <td>
+                                <div class="input">
+                                    <select class="form-select" aria-label="Default select example" title="작업상태선택" name="">
+                                        <option selected="미진행">미진행</option>
+                                        <option value="대기">대기</option>
+                                        <option value="진행중">진행중</option>
+                                        <option value="완료">완료</option>
+                                    </select>
+                                </div>
+                            </td>
+						</tr>
+						<!-- 일반 -->
+						<!-- 긴급 -->
+						<tr>
+							<th>
+								<input type="checkbox">
+							</th>
+							<th scope="row">2</th>
+							<th scope="row">T00002</th>
+							<td>
+								<span class="category emergency">긴급</span>
+							</td>
+                            <td class="text-start">
+								<!-- 새글일 때 new 클래스 추가 -->
+								<a href="#" class="text-link d-flex new">
+									<!-- icon new_icon 추가 -->
+									<span class="icon new_icon">
+										<span class="sr-only">new</span>
+									</span>
+									<em class="text-elipsis">일감이다  일감일다 일감임어ㅣㄴㅇ마러;ㄴㅇ마ㅣㄻㄴ이ㅏㄼㄷ;ㅐㅑ롣ㅈㅁㄴㅇ라ㅐㅕㅁㄴ;ㅣㅇ렁ㄴ마ㅣ;ㄹ</em>
+								</a>
+							</td>
+							<td>2024.03.01</td>
+							<td><input type="text" class="form-control" placeholder="예상시간" name=""></td>
+							<td><input type="text" class="form-control" placeholder="완료시간" name=""></td>
+                            <td>
+                                <div class="input">
+                                    <select class="form-select" aria-label="Default select example" title="작업상태선택" name="">
+                                        <option selected="미진행">미진행</option>
+                                        <option value="대기">대기</option>
+                                        <option value="진행중">진행중</option>
+                                        <option value="완료">완료</option>
+                                    </select>
+                                </div>
+                            </td>
+						</tr>
+						<!-- 긴급 -->
+						<!-- 신규 -->
+						<tr>
+							<th>
+								<input type="checkbox">
+							</th>
+							<th scope="row">000001</th>
+							<th scope="row">T00001</th>
+							<td>
+								<span class="category new">신규</span>
+							</td>
+                            <td class="text-start">
+								<!-- 새글일 때 new 클래스 추가 -->
+								<a href="#" class="text-link d-flex new">
+									<!-- icon new_icon 추가 -->
+									<span class="icon new_icon">
+										<span class="sr-only">new</span>
+									</span>
+									<em class="text-elipsis">일감이다  일감일다 일감임어ㅣㄴㅇ마러;ㄴㅇ마ㅣㄻㄴ이ㅏㄼㄷ;ㅐㅑ롣ㅈㅁㄴㅇ라ㅐㅕㅁㄴ;ㅣㅇ렁ㄴ마ㅣ;ㄹ</em>
+								</a>
+							</td>
+							<td>2024.03.01</td>
+							<td><input type="text" class="form-control" placeholder="예상시간" name=""></td>
+							<td><input type="text" class="form-control" placeholder="완료시간" name=""></td>
+                            <td>
+                                <div class="input">
+                                    <select class="form-select" aria-label="Default select example" title="작업상태선택" name="">
+                                        <option selected="미진행">미진행</option>
+                                        <option value="대기">대기</option>
+                                        <option value="진행중">진행중</option>
+                                        <option value="완료">완료</option>
+                                    </select>
+                                </div>
+                            </td>
+						</tr>
+						<!-- 신규 -->
+				
+				</tbody>
+
+			</table>
+			
+			<!-- ui : table e -->
+			
+
+        </div>
+			
+			
+									
+								
+
+</div>

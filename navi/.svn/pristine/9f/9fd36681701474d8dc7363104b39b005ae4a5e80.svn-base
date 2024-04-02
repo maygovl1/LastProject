@@ -1,0 +1,26 @@
+package kr.or.navi.admin.board.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("/admin")
+public class AdminBoardController {
+
+	@GetMapping("/board/photo")
+	public String photoBoardPage() {
+		return "admin/board/adminPhotoList";
+	}
+
+	@GetMapping("/board/share")
+	public String shareBoardPage() {
+		return "admin/board/adminShareList";
+	}
+
+	@GetMapping("/board/prais")
+	public String praisBoardPage() {
+		return "admin/board/adminPraisList";
+	}
+
+}

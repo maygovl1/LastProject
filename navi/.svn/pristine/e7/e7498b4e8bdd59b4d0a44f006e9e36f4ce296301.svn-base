@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.navi.chat.web.dao.ChatDAO">
+
+
+	<select id="selectChatEmpList" resultType="EmpVO">
+		SELECT E.EMP_IMG, E.EMP_ID, E.DEPT_ID, D.DEPT_NAME, E.PS_ID, P.PS_NAME, E.EMP_NAME, E.EMP_PASS
+		FROM EMP E
+		JOIN POSITION P ON (E.PS_ID = P.PS_ID)
+		JOIN DEPT D ON (E.DEPT_ID = D.DEPT_ID)
+		WHERE EMP_PASS IS NOT NULL AND NOT E.EMP_ID = #{empId}
+		ORDER BY DEPT_NAME DESC, EMP_NAME DESC
+	</select>
+</mapper>

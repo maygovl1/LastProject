@@ -1,0 +1,625 @@
+package kr.or.navi.alarm.service;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.inject.Inject;
+import javax.json.Json;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import kr.or.navi.alarm.dao.AlramBoardMapper;
+import kr.or.navi.alarm.dao.AlramTypeDAO;
+import kr.or.navi.board.prais.dao.PraisDAO;
+import kr.or.navi.common.dao.CommonDAO;
+import kr.or.navi.mapper.dao.EmpDAO;
+import kr.or.navi.mypagedetail.alarm.dao.AlramDAO;
+import kr.or.navi.project.dao.IssueDAO;
+import kr.or.navi.project.dao.ProjectDAO;
+import kr.or.navi.project.dao.TeamDAO;
+import kr.or.navi.task.dao.TaskDAO;
+import kr.or.navi.vo.AlarmTypeVO;
+import kr.or.navi.vo.AlarmVO;
+import kr.or.navi.vo.BoardPostVO;
+import kr.or.navi.vo.CommonVO;
+import kr.or.navi.vo.EmpVO;
+import kr.or.navi.vo.IssueVO;
+import kr.or.navi.vo.ProjectVO;
+import kr.or.navi.vo.TaskVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Component
+@Slf4j
+public class SseEmitters {
+	private static final AtomicLong counter = new AtomicLong();
+	private final Map<EmpVO, SseEmitter> emitters = new ConcurrentHashMap<EmpVO, SseEmitter>();
+	@Inject
+	private AlramTypeDAO atDao;
+	@Inject
+	private AlramDAO dao;
+	@Inject
+	private TeamDAO teamDao;
+	@Inject
+	private IssueDAO issueDao;
+	@Inject
+	private ProjectDAO projectDao;
+
+	public SseEmitter add(EmpVO empVO, SseEmitter emitter) {
+		log.info("emitter : {}", emitter);
+		this.emitters.put(empVO, emitter);
+		log.info("new emitter added: {}", emitter);
+		log.info("emitter list size: {}", emitters.size());
+		emitter.onCompletion(() -> {
+	        log.info("onCompletion callback");
+	        this.emitters.remove(empVO); // 완료되면 리스트에서 삭제
+	    });
+	    
+	    emitter.onTimeout(() -> {
+	        log.info("onTimeout callback");
+	        this.emitters.remove(empVO); // 타임아웃되면 리스트에서 삭제
+	        emitter.complete();
+	    });
+
+	    emitter.onError(e -> {
+	        log.error("onError callback", e);
+	        this.emitters.remove(empVO); // 에러 발생 시 리스트에서 삭제
+	        emitter.complete();
+	    });
+
+		return emitter;
+	}
+
+	public void count() {
+		ObjectMapper objectMapper = new ObjectMapper();
+
+		long count = counter.incrementAndGet();
+		String alram = "알람왔음";
+		emitters.forEach((empVO, emitter) -> {
+			Map<String, String> map = new HashMap<String, String>();
+			map.put("msg", "새로운 글이 등록되었습니다.");
+			map.put("sendId", "길상");
+			map.put("receiveId", "민규");
+			String jsonData = null;
+			try {
+				jsonData = objectMapper.writeValueAsString(map);
+			} catch (JsonProcessingException e) {
+				throw new RuntimeException(e);
+			}
+			log.info("empVO : {}", empVO);
+			log.info("emitter : {}", emitter);
+			try {
+				emitter.send(SseEmitter.event().name("count").data(jsonData));
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		});
+	}
+
+	public void issueReg(EmpVO realUser, String issueId) {
+		IssueVO selectIssue = issueDao.selectIssue(issueId);
+		String proId = selectIssue.getProId();
+		ProjectVO project = projectDao.selectProject(proId);
+		String selectPlId = teamDao.selectPlId(proId);
+		AlarmTypeVO atVO = atDao.selectAlramType("A00003");
+		AlarmVO alarmVO = new AlarmVO();
+		alarmVO.setAlSndrId(realUser.getEmpId());
+		alarmVO.setAlMoveUrl("/project/issue/detail/" + proId + "/" + issueId);
+		alarmVO.setAltypeId("A00003");
+		emitters.forEach((empVO, emitter) -> {
+			log.info("empVO : {}", empVO);
+			log.info("emitter : {}", emitter);
+			if(empVO.equals(realUser)){
+				return;
+			}
+			if (selectPlId.equals(empVO.getEmpId())) {
+				alarmVO.setAlCn("[프로젝트 : " + project.getProName() + "][이슈 ID : "
+						+ selectIssue.getIssueTitle() + "]" + atVO.getAltypeCn());
+				try {
+					String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+					data+="[프로젝트 : " + project.getProName() + "][이슈 ID : "
+							+ selectIssue.getIssueTitle() + "]" + atVO.getAltypeCn();
+					data+="<i class='icon new_icon'></i> </a></li>";
+					emitter.send(SseEmitter.event().name("count").data(data));
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			if (selectIssue.getIssueRegId().equals(empVO.getEmpId())) {
+				alarmVO.setAlCn("[프로젝트 : " + project.getProName() + "][이슈 ID : "
+						+ selectIssue.getIssueTitle() + "]" + atVO.getAltypeCn());
+				try {
+					String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+					data+="[프로젝트 : " + project.getProName() + "][이슈 ID : "
+							+ selectIssue.getIssueTitle() + "]" + atVO.getAltypeCn();
+					data+="<i class='icon new_icon'></i> </a></li>";
+					emitter.send(SseEmitter.event().name("count").data(data));
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		});
+		
+		alarmVO.setAlRcvrId(selectPlId);
+		dao.insertAlram(alarmVO);
+		if(!selectPlId.equals(selectIssue.getIssueRegId())) {
+			alarmVO.setAlRcvrId(selectIssue.getIssueRegId());
+			dao.insertAlram(alarmVO);
+		}
+		
+	}
+//	"<li><a class='alram-item' data-id='A00014' href='/navi/board/photo/B00182'>"[포토공간]새로운 글이 등록되었습니다."<i class='icon new_icon'></i> </a></li>"
+	public void issueMod(EmpVO realUser, String issueId) {
+		IssueVO selectIssue = issueDao.selectIssue(issueId);
+		String proId = selectIssue.getProId();
+		ProjectVO project = projectDao.selectProject(proId);
+		String selectPlId = teamDao.selectPlId(proId);
+		AlarmTypeVO atVO = atDao.selectAlramType("A00004");
+		AlarmVO alarmVO = new AlarmVO();
+		alarmVO.setAlSndrId(realUser.getEmpId());
+		alarmVO.setAlMoveUrl("/project/issue/detail/" + proId + "/" + issueId);
+		alarmVO.setAltypeId("A00004");
+		emitters.forEach((empVO, emitter) -> {
+			log.info("empVO : {}", empVO);
+			log.info("emitter : {}", emitter);
+			if(empVO.equals(realUser)){
+				return;
+			}
+			if (selectPlId.equals(empVO.getEmpId())) {
+				alarmVO.setAlCn("[프로젝트 : " + project.getProName() + "][이슈 ID : "
+						+ selectIssue.getIssueTitle() + "]" + atVO.getAltypeCn());
+				try {
+					String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+					data+="[프로젝트 : " + project.getProName() + "][이슈 ID : "
+							+ selectIssue.getIssueTitle() + "]" + atVO.getAltypeCn();
+					data+="<i class='icon new_icon'></i> </a></li>";
+					emitter.send(SseEmitter.event().name("count").data(data));
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			if (selectIssue.getIssueRegId().equals(empVO.getEmpId())) {
+				alarmVO.setAlCn("[프로젝트 : " + project.getProName() + "][이슈 ID : "
+						+ selectIssue.getIssueTitle() + "]" + atVO.getAltypeCn());
+				try {
+					String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+					data+="[프로젝트 : " + project.getProName() + "][이슈 ID : "
+							+ selectIssue.getIssueTitle() + "]" + atVO.getAltypeCn();
+					data+="<i class='icon new_icon'></i> </a></li>";
+					emitter.send(SseEmitter.event().name("count").data(data));
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		});
+		
+			alarmVO.setAlRcvrId(selectPlId);
+			dao.insertAlram(alarmVO);
+			if(!selectPlId.equals(selectIssue.getIssueRegId())) {
+				alarmVO.setAlRcvrId(selectIssue.getIssueRegId());
+				dao.insertAlram(alarmVO);
+			}
+	}
+
+	public void issueDel(EmpVO realUser, String issueId) {
+		IssueVO selectIssue = issueDao.selectIssue(issueId);
+		String proId = selectIssue.getProId();
+		ProjectVO project = projectDao.selectProject(proId);
+		String selectPlId = teamDao.selectPlId(proId);
+		AlarmTypeVO atVO = atDao.selectAlramType("A00005");
+		AlarmVO alarmVO = new AlarmVO();
+		alarmVO.setAlSndrId(realUser.getEmpId());
+		alarmVO.setAlMoveUrl("/project/issue/detail/" + proId + "/" + issueId);
+		alarmVO.setAltypeId("A00005");
+		emitters.forEach((empVO, emitter) -> {
+			log.info("empVO : {}", empVO);
+			log.info("emitter : {}", emitter);
+			if(empVO.equals(realUser)){
+				return;
+			}
+			if (selectPlId.equals(empVO.getEmpId())) {
+				alarmVO.setAlCn("[프로젝트 : " + project.getProName() + "][이슈 ID : "
+						+ selectIssue.getIssueTitle() + "]" + atVO.getAltypeCn());
+				try {
+					String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+					data+="[프로젝트 : " + project.getProName() + "][이슈 ID : "
+							+ selectIssue.getIssueTitle() + "]" + atVO.getAltypeCn();
+					data+="<i class='icon new_icon'></i> </a></li>";
+					emitter.send(SseEmitter.event().name("count").data(data));
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			if (selectIssue.getIssueRegId().equals(empVO.getEmpId())) {
+				alarmVO.setAlCn("[프로젝트 : " + project.getProName() + "][이슈 ID : "
+						+ selectIssue.getIssueTitle() + "]" + atVO.getAltypeCn());
+				try {
+					String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+					data+="[프로젝트 : " + project.getProName() + "][이슈 ID : "
+							+ selectIssue.getIssueTitle() + "]" + atVO.getAltypeCn();
+					data+="<i class='icon new_icon'></i> </a></li>";
+					emitter.send(SseEmitter.event().name("count").data(data));
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		});
+		
+		alarmVO.setAlRcvrId(selectPlId);
+		dao.insertAlram(alarmVO);
+		if(!selectPlId.equals(selectIssue.getIssueRegId())) {
+			alarmVO.setAlRcvrId(selectIssue.getIssueRegId());
+			dao.insertAlram(alarmVO);
+		}
+	}
+
+	@Inject
+	private TaskDAO taskDao;
+
+	public void taskReg(EmpVO realUser, String taskId) {
+		TaskVO task = taskDao.select(taskId);
+		String proId = task.getProId();
+		ProjectVO project = projectDao.selectProject(proId);
+		String selectPlId = teamDao.selectPlId(proId);
+		AlarmTypeVO atVO = atDao.selectAlramType("A00006");
+		AlarmVO alarmVO = new AlarmVO();
+		alarmVO.setAltypeId("A00006");
+		alarmVO.setAlRcvrId(realUser.getEmpId());
+		alarmVO.setAlMoveUrl("/project/task/" + proId + "/" + taskId);
+		String cn = "새로운 일감이 등록되었습니다.";
+		emitters.forEach((empVO, emitter) -> {
+			log.info("empVO : {}", empVO);
+			log.info("emitter : {}", emitter);
+			if(empVO.equals(realUser)){
+				return;
+			}
+			if (task.getTaskManId().equals(empVO.getEmpId())) {
+				try {
+					String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+					data+="[프로젝트 : " + project.getProName() + "][일감 명 : "
+							+ task.getTaskTitle() + "]" + atVO.getAltypeCn();
+					data+="<i class='icon new_icon'></i> </a></li>";
+					emitter.send(SseEmitter.event().name("count").data(data));
+
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			if (selectPlId.equals(empVO.getEmpId())) {
+				try {
+					String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+					data+="[프로젝트 : " + project.getProName() + "][일감 명 : "
+							+ task.getTaskTitle() + "]" + atVO.getAltypeCn();
+					data+="<i class='icon new_icon'></i> </a></li>";
+					emitter.send(SseEmitter.event().name("count").data(data));
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+
+		});
+		alarmVO.setAlSndrId(task.getTaskManId());
+		dao.insertAlram(alarmVO);
+		alarmVO.setAlCn("[프로젝트 : " + project.getProName() + "][일감 명 : "
+				+ task.getTaskTitle() + "]" + atVO.getAltypeCn());
+		// pl
+		if(!task.getTaskManId().equals(selectPlId)) {
+			alarmVO.setAlSndrId(selectPlId);
+			alarmVO.setAlCn(cn);
+			dao.insertAlram(alarmVO);
+		}
+	}
+
+	public void taskMod(EmpVO realUser, String taskId) {
+		TaskVO task = taskDao.select(taskId);
+		String proId = task.getProId();
+		ProjectVO project = projectDao.selectProject(proId);
+		String selectPlId = teamDao.selectPlId(proId);
+		AlarmTypeVO atVO = atDao.selectAlramType("A00014");
+		AlarmVO alarmVO = new AlarmVO();
+		alarmVO.setAltypeId("A00014");
+		alarmVO.setAlRcvrId(realUser.getEmpId());
+		alarmVO.setAlMoveUrl("/project/task/" + proId + "/" + taskId);
+		
+		emitters.forEach((empVO, emitter) -> {
+			log.info("empVO : {}", empVO);
+			log.info("emitter : {}", emitter);
+			if(empVO.equals(realUser)){
+				return;
+			}
+			if (task.getTaskManId().equals(empVO.getEmpId())) {
+				alarmVO.setAlCn("[프로젝트 : " + project.getProName() + "][일감 명 : "
+						+ task.getTaskTitle() + "]" + atVO.getAltypeCn());
+				try {
+					String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+					data+="[프로젝트 : " + project.getProName() + "][일감 명 : "
+							+ task.getTaskTitle() + "]" + atVO.getAltypeCn();
+					data+="<i class='icon new_icon'></i> </a></li>";
+					emitter.send(SseEmitter.event().name("count").data(data));
+
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			if (selectPlId.equals(empVO.getEmpId())) {
+				alarmVO.setAlCn("[프로젝트 : " + project.getProName() + "][일감 명 : "
+						+ task.getTaskTitle() + "]" + atVO.getAltypeCn());
+				try {
+					String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+					data+="[프로젝트 : " + project.getProName() + "][일감 명 : "
+							+ task.getTaskTitle() + "]" + atVO.getAltypeCn();
+					data+="<i class='icon new_icon'></i> </a></li>";
+					emitter.send(SseEmitter.event().name("count").data(data));
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+
+		});
+		alarmVO.setAlSndrId(task.getTaskManId());
+		dao.insertAlram(alarmVO);
+		if(!task.getTaskManId().equals(selectPlId)) {
+			alarmVO.setAlSndrId(selectPlId);
+			dao.insertAlram(alarmVO);
+		}
+		
+	}
+
+	public void taskDel(EmpVO realUser, String taskId) {
+		TaskVO task = taskDao.select(taskId);
+		String proId = task.getProId();
+		ProjectVO project = projectDao.selectProject(proId);
+		String selectPlId = teamDao.selectPlId(proId);
+		AlarmTypeVO atVO = atDao.selectAlramType("A00015");
+		AlarmVO alarmVO = new AlarmVO();
+		alarmVO.setAltypeId("A00015");
+		alarmVO.setAlRcvrId(realUser.getEmpId());
+		alarmVO.setAlMoveUrl("/project/task/" + proId + "/" + taskId);
+		emitters.forEach((empVO, emitter) -> {
+			log.info("empVO : {}", empVO);
+			log.info("emitter : {}", emitter);
+			if(empVO.equals(realUser)){
+				return;
+			}
+			if (task.getTaskManId().equals(empVO.getEmpId())) {
+
+				try {
+					String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+					data+="[프로젝트 : " + project.getProName() + "][일감 명 : "
+							+ task.getTaskTitle() + "]" + atVO.getAltypeCn();
+					data+="<i class='icon new_icon'></i> </a></li>";
+					emitter.send(SseEmitter.event().name("count").data(data));
+
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			if (selectPlId.equals(empVO.getEmpId())) {
+				try {
+					String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+					data+="[프로젝트 : " + project.getProName() + "][일감 명 : "
+							+ task.getTaskTitle() + "]" + atVO.getAltypeCn();
+					data+="<i class='icon new_icon'></i> </a></li>";
+					emitter.send(SseEmitter.event().name("count").data(data));
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		});
+		alarmVO.setAlSndrId(task.getTaskManId());
+		dao.insertAlram(alarmVO);
+		if(!task.getTaskManId().equals(selectPlId)) {
+			alarmVO.setAlSndrId(selectPlId);
+			dao.insertAlram(alarmVO);
+		}
+	}
+
+	public void taskComp(EmpVO realUser, String taskId) {
+		TaskVO task = taskDao.select(taskId);
+		String proId = task.getProId();
+		ProjectVO project = projectDao.selectProject(proId);
+		String selectPlId = teamDao.selectPlId(proId);
+		AlarmTypeVO atVO = atDao.selectAlramType("A00007");
+		AlarmVO alarmVO = new AlarmVO();
+		alarmVO.setAltypeId("A00007");
+		alarmVO.setAlRcvrId(realUser.getEmpId());
+		alarmVO.setAlMoveUrl("/project/task/" + proId + "/" + taskId);
+		
+		emitters.forEach((empVO, emitter) -> {
+			log.info("empVO : {}", empVO);
+			log.info("emitter : {}", emitter);
+			if(empVO.equals(realUser)){
+				return;
+			}
+			if (task.getTaskManId().equals(empVO.getEmpId())) {
+				alarmVO.setAlCn("[프로젝트 : " + project.getProName() + "][일감 명 : "
+							+ task.getTaskTitle() + "]" + atVO.getAltypeCn());
+				try {
+					String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+					data+="[프로젝트 : " + project.getProName() + "][일감 명 : "
+							+ task.getTaskTitle() + "]" + atVO.getAltypeCn();
+					data+="<i class='icon new_icon'></i> </a></li>";
+					emitter.send(SseEmitter.event().name("count").data(data));
+
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			if (selectPlId.equals(empVO.getEmpId())) {
+				alarmVO.setAlCn("[프로젝트 : " + project.getProName() + "][일감 명 : "
+						+ task.getTaskTitle() + "]" + atVO.getAltypeCn());
+				try {
+					String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+					data+="[프로젝트 : " + project.getProName() + "][일감 명 : "
+							+ task.getTaskTitle() + "]" + atVO.getAltypeCn();
+					data+="<i class='icon new_icon'></i> </a></li>";
+					emitter.send(SseEmitter.event().name("count").data(data));
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		});
+		alarmVO.setAlSndrId(task.getTaskManId());
+		dao.insertAlram(alarmVO);
+		if(!task.getTaskManId().equals(selectPlId)) {
+			alarmVO.setAlSndrId(selectPlId);
+			dao.insertAlram(alarmVO);
+		}
+	}
+
+	@Inject
+	private PraisDAO prDao;
+	@Inject
+	private EmpDAO empDao;
+	@Inject
+	private CommonDAO cmDao;
+	@Inject
+	private AlramBoardMapper boardMapper;
+	public void boardReg(EmpVO realUser, String bpId,String atId) {
+		BoardPostVO selectPrais = boardMapper.selectBaordPost(bpId);
+		List<EmpVO> empList = empDao.selectList();
+		AlarmTypeVO atVO = atDao.selectAlramType(atId);
+		CommonVO brdVO = cmDao.selectOne(selectPrais.getBrdId());
+		AlarmVO alarmVO = new AlarmVO();
+		alarmVO.setAlSndrId(realUser.getEmpId());
+		alarmVO.setAlMoveUrl("/board/" + brdVO.getCmAtt1() + "/" + bpId);
+		alarmVO.setAltypeId(atId);
+		alarmVO.setAlCn("[" + brdVO.getCmName() + "]" + atVO.getAltypeCn());
+		emitters.forEach((empVO, emitter) -> {
+			log.info("empVO : {}", empVO);
+			log.info("emitter : {}", emitter);
+			if(empVO.equals(realUser)){
+				return;
+			}
+			try {
+				String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+				data+="[" + brdVO.getCmName() + "]" + atVO.getAltypeCn();
+				data+="<i class='icon new_icon'></i> </a></li>";
+				emitter.send(
+						SseEmitter.event()
+						.name("count")
+						.data(data));
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		});
+		empList.forEach(emp -> {
+			alarmVO.setAlRcvrId(emp.getEmpId());
+			dao.insertAlram(alarmVO);
+		});
+	}
+	public void boardDel(EmpVO realUser, String bpId) {
+		BoardPostVO selectPrais = boardMapper.selectBaordPost(bpId);
+		List<EmpVO> empList = empDao.selectList();
+		AlarmTypeVO atVO = atDao.selectAlramType("A00010");
+		CommonVO brdVO = cmDao.selectOne(selectPrais.getBrdId());
+		AlarmVO alarmVO = new AlarmVO();
+		alarmVO.setAlSndrId(realUser.getEmpId());
+		alarmVO.setAlMoveUrl("/board/" + brdVO.getCmAtt1() + "/" + bpId);
+		alarmVO.setAltypeId("A00010");
+		alarmVO.setAlCn("[" + brdVO.getCmName() + "]" + atVO.getAltypeCn());
+		emitters.forEach((empVO, emitter) -> {
+			log.info("empVO : {}", empVO);
+			log.info("emitter : {}", emitter);
+			if(empVO.equals(realUser)){
+				return;
+			}
+			try {
+				String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+				data+="[" + brdVO.getCmName() + "]" + atVO.getAltypeCn();
+				data+="<i class='icon new_icon'></i> </a></li>";
+				emitter.send(
+						SseEmitter.event()
+						.name("count")
+						.data(data));
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		});
+		empList.forEach(emp -> {
+			alarmVO.setAlRcvrId(emp.getEmpId());
+			dao.insertAlram(alarmVO);
+		});
+	}
+	public void qnaReg(EmpVO realUser, String bpId) {
+		BoardPostVO selectPrais = boardMapper.selectBaordPost(bpId);
+		EmpVO admin=boardMapper.selectAdmin();
+		List<EmpVO> empList = empDao.selectList();
+		AlarmTypeVO atVO = atDao.selectAlramType("A00017");
+		CommonVO brdVO = cmDao.selectOne(selectPrais.getBrdId());
+		AlarmVO alarmVO = new AlarmVO();
+		alarmVO.setAlSndrId(realUser.getEmpId());
+		alarmVO.setAltypeId("A00017");
+		alarmVO.setAlCn("[" + brdVO.getCmName() + "]" + atVO.getAltypeCn());
+		emitters.forEach((empVO, emitter) -> {
+			log.info("empVO : {}", empVO);
+			log.info("emitter : {}", emitter);
+			if(admin.getEmpId().equals(empVO.getEmpId())) {
+				try {
+					String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+"/admin/qna/answer/"+bpId+"'>";
+					data+="[" + brdVO.getCmName() + "]" + atVO.getAltypeCn();
+					data+="<i class='icon new_icon'></i> </a></li>";
+					emitter.send(
+							SseEmitter.event()
+							.name("count")
+							.data(data));
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			
+		});
+		alarmVO.setAlMoveUrl("/board/" + brdVO.getCmAtt1() + "/" + bpId);
+		alarmVO.setAlRcvrId(selectPrais.getEmpId());
+		dao.insertAlram(alarmVO);
+//		/admin/qna/answer/B00206
+		alarmVO.setAlMoveUrl("/admin/qna/answer/" + bpId);
+		alarmVO.setAlRcvrId(admin.getEmpId());
+		dao.insertAlram(alarmVO);
+	}
+	public void qnaAnser(EmpVO realUser, String bpId) {
+		BoardPostVO selectPrais = boardMapper.selectBaordPost(bpId);
+		List<EmpVO> empList = empDao.selectList();
+		AlarmTypeVO atVO = atDao.selectAlramType("A00016");
+		CommonVO brdVO = cmDao.selectOne(selectPrais.getBrdId());
+		AlarmVO alarmVO = new AlarmVO();
+		alarmVO.setAlSndrId(realUser.getEmpId());
+		alarmVO.setAlMoveUrl("/board/" + brdVO.getCmAtt1() + "/" + bpId);
+		alarmVO.setAltypeId("A00016");
+		alarmVO.setAlCn("[" + brdVO.getCmName() + "]" + atVO.getAltypeCn());
+		emitters.forEach((empVO, emitter) -> {
+			log.info("empVO : {}", empVO);
+			log.info("emitter : {}", emitter);
+			if(selectPrais.getEmpId().equals(empVO.getEmpId())) {
+				try {
+					String data="<li><a class='alram-item' data-id='"+alarmVO.getAlarmId()+"' href='/navi"+alarmVO.getAlMoveUrl()+"'>";
+					data+="[" + brdVO.getCmName() + "]" + atVO.getAltypeCn();
+					data+="<i class='icon new_icon'></i> </a></li>";
+					emitter.send(
+							SseEmitter.event()
+							.name("count")
+							.data(data));
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			
+		});
+		alarmVO.setAlRcvrId(selectPrais.getEmpId());
+		dao.insertAlram(alarmVO);
+		alarmVO.setAlRcvrId("E00003");
+		dao.insertAlram(alarmVO);
+	}
+}

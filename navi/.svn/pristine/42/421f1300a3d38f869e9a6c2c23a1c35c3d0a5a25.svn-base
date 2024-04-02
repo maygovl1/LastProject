@@ -1,0 +1,21 @@
+package kr.or.navi.vo;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(of="icId")
+public class IssueCommentVO implements Serializable{
+	private String icId;
+	private String icTopId;
+	private String proId;
+	private String icRegId;
+	private String issueId;
+	private LocalDateTime icRegDt;
+	private LocalDateTime icModDt;
+	private String icCn;
+	private String icDelYn;
+}

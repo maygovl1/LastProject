@@ -1,0 +1,20 @@
+package kr.or.navi.projectdetail.calendar.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import kr.or.navi.projectdetail.issue.controller.ProjectIssueController;
+import lombok.extern.slf4j.Slf4j;
+
+@Controller
+@RequestMapping("/project/calendar")
+@Slf4j
+public class ProjectCalendarController {
+	@GetMapping("{proId}")
+	public String callanderPage(@PathVariable(name = "proId") String proId,Model model) {
+		return "project/callander/callander";
+	}
+}

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.navi.task.dao.TaskDAO">
+<!-- 일감상태TaskStatusVO / 일감진척도 TaskProcessStatusVO 는 일감과 has a 관계 -->
+<!-- 일감담당자는 일감과 Has many 관계  -->
+<!-- 프로젝트에 대한 일감조회 : 조건은 프로젝트 아이디로 지정   -->
+
+	<resultMap type="TaskVO" id="taskMap" autoMapping="true">
+	    <id property="taskId" column="TASK_ID"/>
+	    <!-- project 변수의 매핑 -->
+	    <association property="projectMap" javaType="hashmap">
+	        <!-- ProjectVO 클래스의 각 필드와 열(column)을 매핑 -->
+	        <result property="prodName" column="PRO_NAME"/>
+	    </association>
+	    <!-- project 변수의 매핑 -->
+	    <!-- taskStatusVO mapping : -->
+	    <association property="taskStatus" javaType="TaskStatusVO" autoMapping="true">
+			<id property="tsId" column="TS_ID"/>
+		</association>
+	    <!-- task status 변수의 매핑 -->
+	    <!-- taskProcessStatus -->
+	     <association property="taskProcessStatus" javaType="TaskProcessStatusVO" autoMapping="true">
+			<id property="tpsId" column="TPS_ID"/>
+		</association>
+	    <!-- taskProcessStatus -->
+	</resultMap>
+	
+	
+	<!-- 전체조회 -->
+	<select id="selectList" resultMap="taskMap" parameterType="PaginationInfo">
+	WITH TaskProject AS (
+	    SELECT 
+	        T.TASK_ID,
+	        T.TS_ID, 
+	        T.PRO_ID,
+	        T.TPS_ID,
+	        T.TASK_MAN_ID,
+	        T.TASK_TOP_ID,
+	        T.TASK_REG_ID,
+	        T.TASK_TITLE,
+	        T.TASK_REG_DT,
+	        T.TASK_DDLINE_DT,
+	        T.TASK_MOD_DT,
+	        T.TASK_CN,
+	        T.TASK_RQRD,
+	        T.TASK_EST_TIME,
+	        T.TASK_COMP_DT,
+	        P.PRO_NAME
+	    FROM 
+	        TASK T
+	    JOIN 
+	        PROJECT P ON T.PRO_ID = P.PRO_ID
+	)
+		
+	SELECT 
+	    TaskProject.PRO_ID
+	    ,TaskProject.PRO_NAME
+	    ,TaskProject.TASK_TOP_ID
+	    ,TaskProject.TASK_ID
+	    ,TS.TS_NAME
+	    ,TaskProject.TASK_TITLE
+	    ,TSP.TPS_ING
+	    ,TSP.TPS_NAME
+	    ,TaskProject.TASK_MAN_ID
+	    ,TaskProject.TASK_REG_DT
+	    ,TaskProject.TASK_DDLINE_DT
+	    ,TaskProject.TASK_MOD_DT
+	    ,TaskProject.TASK_CN
+	FROM TaskProject
+	JOIN TASK_STATUS TS ON (TaskProject.TS_ID= TS.TS_ID)
+	JOIN TASK_PROCESS_STATUS TSP ON ( TaskProject.TPS_ID = TSP.TPS_ID )
+	
+	</select>
+	<!--전체조회  -->
+	<!-- 총 레코드  -->
+	<select id="selectTotalRecord">
+    WITH TaskProject AS (
+        SELECT 
+            T.TASK_ID,
+            T.TS_ID, 
+            T.PRO_ID,
+            T.TPS_ID,
+            T.TASK_MAN_ID,
+            T.TASK_TOP_ID,
+            T.TASK_REG_ID,
+            T.TASK_TITLE,
+            T.TASK_REG_DT,
+            T.TASK_DDLINE_DT,
+            T.TASK_MOD_DT,
+            T.TASK_CN,
+            T.TASK_RQRD,
+            T.TASK_EST_TIME,
+            T.TASK_COMP_DT,
+            P.PRO_NAME
+        FROM 
+            TASK T
+        JOIN 
+            PROJECT P ON T.PRO_ID = P.PRO_ID
+    ),
+    totalRecord AS (
+        SELECT 
+            TaskProject.PRO_ID,
+            TaskProject.PRO_NAME,
+            TaskProject.TASK_TOP_ID,
+            TaskProject.TASK_ID,
+            TS.TS_NAME,
+            TaskProject.TASK_TITLE,
+            TSP.TPS_ING,
+            TSP.TPS_NAME,
+            TaskProject.TASK_MAN_ID,
+            TaskProject.TASK_REG_DT,
+            TaskProject.TASK_DDLINE_DT,
+            TaskProject.TASK_MOD_DT,
+            TaskProject.TASK_CN
+        FROM TaskProject
+        JOIN TASK_STATUS TS ON TaskProject.TS_ID = TS.TS_ID
+        JOIN TASK_PROCESS_STATUS TSP ON TaskProject.TPS_ID = TSP.TPS_ID 
+    )
+    SELECT count(*) FROM totalRecord
+</select>
+
+		
+	
+	<!-- 총 레코드  -->
+</mapper>

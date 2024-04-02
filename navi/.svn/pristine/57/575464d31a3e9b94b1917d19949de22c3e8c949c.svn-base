@@ -1,0 +1,17 @@
+package kr.or.navi.board.form.dao;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.vo.BoardPostVO;
+
+@Mapper
+public interface FormDAO {
+	public List<BoardPostVO> selectFormList(PaginationInfo paging);
+	public int selectTotalRecord(PaginationInfo paging);
+	public BoardPostVO selectForm(String bpId);
+	public int updateForm(@Param("form")BoardPostVO form);
+}

@@ -1,0 +1,30 @@
+package kr.or.navi.vo;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(of = "biId")
+public class BookmarkIssueVO {
+	private String biId;
+	private String IssueId;
+	private String EmpId;
+	private String ProId;
+	private LocalDateTime BiRegDt;
+	private LocalDateTime BiDelDt;
+
+	public String getBiRegDtStr() {
+		if (BiRegDt != null)
+			return BiRegDt.format(DateTimeFormatter.ISO_DATE);
+		return null;
+	}
+	
+	public String getBiDelDtStr() {
+		if (BiDelDt != null)
+			return BiDelDt.format(DateTimeFormatter.ISO_DATE);
+		return null;
+	}
+}

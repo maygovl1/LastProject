@@ -1,0 +1,53 @@
+// 현재 페이지의 contextPath를 가져옴
+const cPath = document.body.dataset.contextPath;
+
+// CSRF 토큰을 가져오는 함수
+function getCsrfToken() {
+    return document.querySelector('meta[name="_csrf"]').getAttribute('content');
+}
+
+// CSRF 헤더를 가져오는 함수
+function getCsrfHeader() {
+    return document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+}
+
+// ".bookMark" 클래스를 가진 요소가 클릭되었을 때의 이벤트 처리
+$(".bookMark").on("click", function(e) {
+    // 기본 이벤트 방지
+    e.preventDefault;
+
+ 	// 클릭된 요소에서 데이터 가져오기
+    const issueId = $(this).data("mark-id");
+
+    // 서버로의 요청을 위한 URL 설정
+    const url = cPath + "/mypage/bookmark/addBookmark";
+
+    // 서버로 POST 요청을 보냄
+    fetch(url, {
+        method: "POST",
+        headers: {
+            "Accept": "application/json", // JSON 형식의 응답을 수락함
+            "Content-Type": clickForm.enctype, // 요청의 Content-Type은 clickForm.enctype 값으로 설정됨
+            [getCsrfHeader()]: getCsrfToken() // CSRF 헤더와 토큰을 요청 헤더에 추가함
+        },
+		body: JSON.stringify({
+			issueId: issueId
+		})
+    }).then(resp => {
+        // 응답 확인
+        if (resp.ok) {
+            // 응답이 정상적인 경우, ".bookMark" 요소의 클래스를 토글함
+            $(this).toggleClass("active");
+            return resp.text(); // 응답 텍스트 반환
+        } else {
+            // 응답이 에러인 경우, 에러를 던짐
+            throw new Error(`상태코드 ${resp.status} 수신`, { cause: resp });
+        }
+    }).then(text => {
+        // 응답 텍스트 출력
+        console.log(text);
+    }).catch(err => {
+        // 오류 발생 시 오류 로그 출력
+        console.error(err);
+    });
+});

@@ -1,0 +1,39 @@
+package kr.or.navi.projectdetail.issue.controller.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.navi.project.dao.IssueDAO;
+import kr.or.navi.vo.IssueCommentVO;
+import kr.or.navi.vo.IssueVO;
+
+@Service
+public class IssueServiceImpl implements IssueService{
+
+	@Inject
+	private IssueDAO dao;
+	@Override
+	public IssueVO selectIssueOne(String issueId) {
+		return dao.selectIssue(issueId);
+	}
+	@Override
+	public int removeIssue(String issueId) {
+		return dao.deleteIssue(issueId);
+	}
+	@Override
+	public int modifyIssue(IssueVO issue) {
+		return dao.updateIssue(issue);
+	}
+	@Override
+	public int createIssue(IssueVO issue) {
+		return dao.insertIssue(issue);
+	}
+	@Override
+	public List<IssueCommentVO> retrieveIssueCommentList(String issueId) {
+		return dao.selectIssueCommentList(issueId);
+	}
+
+}

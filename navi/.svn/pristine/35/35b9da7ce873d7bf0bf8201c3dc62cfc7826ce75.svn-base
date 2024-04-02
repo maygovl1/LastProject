@@ -1,0 +1,46 @@
+package kr.or.navi.todaylist.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.task.dao.TaskDAO;
+import kr.or.navi.todaylist.dao.TodayListDAO;
+import kr.or.navi.vo.TodayListVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class TodayListServiceImple implements TodayListService{
+	
+	@Inject
+	TodayListDAO tdDao;
+
+	@Override
+	public List<TodayListVO> selectTaskList(PaginationInfo paging, String taskManId) {
+		//프로젝트 아이디와, 담당자에 따른 목록 전체조회
+		int totalRecord = tdDao.selectTaskListTotalRecord(paging, taskManId);
+		paging.setTotalRecord(totalRecord);
+		log.info("test: {}",tdDao.selectTaskList(paging, taskManId));
+		return tdDao.selectTaskList(paging, taskManId);
+	}
+
+	@Override
+	public TodayListVO taskDetail(String taskId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+
+
+
+
+
+
+	
+
+}

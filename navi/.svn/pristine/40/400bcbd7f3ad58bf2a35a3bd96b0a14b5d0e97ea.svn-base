@@ -1,0 +1,18 @@
+package kr.or.navi.vo;
+
+import java.io.Serializable;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(of="fsfId")
+public class FileSaveFileVO implements Serializable{
+	private String fsfId;
+	private String fsnId;
+	private String proId;
+	private String fsfRegId;
+	private String fsfGbId;
+	private String fsfAttchFile;
+	private String fsfOrgNm;
+}

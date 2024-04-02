@@ -1,0 +1,59 @@
+package kr.or.navi.wiki.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.vo.BoardPostVO;
+import kr.or.navi.vo.WikiVO;
+import kr.or.navi.wiki.dao.WikiDAO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class WikiServiceImle implements WikiService{
+	
+	@Inject
+	private WikiDAO dao;
+
+	@Override
+	public List<WikiVO> retrieveWikiList(PaginationInfo paging) {
+		int totalRecord = dao.totalRecord(paging);
+		paging.setTotalRecord(totalRecord);
+		return dao.selectWikiList(paging);
+	}
+
+	@Override
+	public WikiVO retrieveWiki(String wikiId) {
+		return dao.selectWiki(wikiId);
+	}
+
+	@Override
+	public int modifyWiki(WikiVO vo) {
+		return dao.updateWiki(vo);
+	}
+//
+//	@Override
+//	public int removeWiki(String bpId) {
+//		return dao.deleteWiki(bpId);
+//	}
+//
+//	@Override
+//	public int createWiki(WikiVO vo) {
+//		return dao.insertWiki(vo);
+//	}
+
+	@Override
+	public WikiVO retriveProWiki(String proId) {
+		return dao.selectProWiki(proId);
+	}
+
+	@Override
+	public int createWiki(WikiVO vo) {
+		return dao.insertWiki(vo);
+	}
+
+}

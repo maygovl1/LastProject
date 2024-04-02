@@ -1,0 +1,12 @@
+package kr.or.navi.project.dao;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Param;
+
+import kr.or.navi.vo.TeamVO;
+
+public interface TeamDAO {
+	public List<TeamVO> selectTeam(@Param("proId")String proId);
+	public TeamVO selectTeamList(@Param("proId") String proId,@Param("empId") String empId);
+}

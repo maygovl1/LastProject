@@ -1,0 +1,65 @@
+package kr.or.navi.vo;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import javax.validation.constraints.NotBlank;
+
+import org.springframework.format.annotation.DateTimeFormat;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(of="wikiId")
+public class WikiVO implements Serializable{
+	private int rnum;
+	private String wikiId;
+	private String proId;
+	private String proName;
+	@NotBlank
+	private String wikiTitle;
+	@NotBlank
+	private String wikiCn;
+	private LocalDateTime wikiRegDt;
+	private LocalDateTime wikiModDt;
+	private LocalDateTime wikiDelDt;
+	@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+	private LocalDateTime proRegDt;
+	@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+	private LocalDateTime proDdlineEx;
+	@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+	private LocalDateTime proDdlineDt;
+	private String proDdlineYn;
+	private String cmId;
+	private String cmName;
+	private String empId;
+	private String empName;
+	public boolean isPLMember(EmpVO emp) {
+		return emp.getEmpId().equals(this.empId);
+	}
+	private List<TeamVO> teamList;
+	
+	public String getProRegDtStr() {
+		if(proRegDt!=null)
+		return proRegDt.format(DateTimeFormatter.ISO_DATE);
+		return null;
+	}
+	public String getRealProRegDtStr() {
+		if(proRegDt!=null)
+		return proRegDt.format(DateTimeFormatter.ISO_DATE_TIME);
+		return null;
+	}
+	public String getProDdlineExStr() {
+		if(proDdlineEx!=null)
+		return proDdlineEx.format(DateTimeFormatter.ISO_DATE);
+		return null;
+	}
+	public String getWikiModDtStr() {
+		if(wikiModDt!=null)
+		return wikiModDt.format(DateTimeFormatter.ISO_DATE);
+		return null;
+	}
+}

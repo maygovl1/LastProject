@@ -1,0 +1,16 @@
+package kr.or.navi.projectdetail.task.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("/project/task")
+public class ProjectTaskController {
+	@GetMapping("{proId}")
+	public String taskPage(@PathVariable(name = "proId") String proId,Model model) {
+		return "project/task/task";
+	}
+}

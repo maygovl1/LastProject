@@ -1,0 +1,44 @@
+package kr.or.navi.task.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.task.dao.TaskDAO;
+import kr.or.navi.vo.TaskVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class TaskServiceImple implements TaskService{
+
+	//1.dao injection 하기
+	@Inject
+	private TaskDAO taskDao;
+
+	@Override
+	public List<TaskVO> taskList(PaginationInfo paging) {
+		int totalRecord = taskDao.selectTotalRecord(paging);
+		paging.setTotalRecord(totalRecord); // 컨트롤러로부터 받아오는 정보를 셋팅해서, paginationInfo 에게 넘겨주기
+		log.info("taskDao",taskDao.selectList(paging));
+		return taskDao.selectList(paging);
+	}
+
+	@Override
+	public TaskVO retriveTask(String taskId) {
+		return taskDao.select(taskId);
+	}
+
+	@Override
+	public int removeTask(String taskId) {
+		return taskDao.deleteTask(taskId);
+	}
+
+	
+	
+
+	
+}

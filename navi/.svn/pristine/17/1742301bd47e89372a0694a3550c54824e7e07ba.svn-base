@@ -1,0 +1,21 @@
+package kr.or.navi.vo;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(of="alarmId")
+public class AlarmVO implements Serializable{
+	private String alarmId;
+	private String altypeId;
+	private String alRcvrId;
+	private String alSndrIdsendUser;
+	private String alRdYn;
+	private LocalDateTime alRegDt;
+	private String alMoveUrl;
+	private String alCn;
+	private String alDelYn;
+}

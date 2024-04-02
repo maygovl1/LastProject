@@ -1,0 +1,135 @@
+package kr.or.navi.board.photo.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import kr.or.navi.common.paging.SearchCondition;
+import kr.or.navi.mypage.service.MypageService;
+import kr.or.navi.security.RealUser;
+import kr.or.navi.validate.InsertGroup;
+import kr.or.navi.common.paging.BootstrapFormBasePaginationRenderer;
+import kr.or.navi.common.paging.PaginationRenderer;
+import kr.or.navi.board.photo.service.PhotoService;
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.vo.BoardCommentVO;
+import kr.or.navi.vo.BoardPostVO;
+import kr.or.navi.vo.BookmarkBoardVO;
+import kr.or.navi.vo.EmpVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Controller
+@RequestMapping("/board/photo")
+@Slf4j
+public class PhotoController {
+
+	@Inject
+	private PhotoService service;
+	
+	@Inject
+	private MypageService mservice;
+	
+	@GetMapping
+	public String photoList(			
+			@RealUser EmpVO realUser
+			,@RequestParam(required = false, defaultValue = "1") int currentPage
+			, Model model
+			, @ModelAttribute("simpleCondition") SearchCondition simpleCondition
+			) {
+		String empId = realUser.getEmpId();
+		List<BookmarkBoardVO> bkList = mservice.retriveBookMarkBoardList(empId);
+		model.addAttribute("bkList", bkList);
+		log.info("simpleConditon:{}",simpleCondition);
+		PaginationInfo paging = new PaginationInfo(6,6);
+		paging.setCurrentPage(currentPage);
+		paging.setSimpleCondition(simpleCondition);
+		List<BoardPostVO> photoList = service.retrievePhotoList(paging);
+		model.addAttribute("photoList",photoList);
+		PaginationRenderer renderer = new BootstrapFormBasePaginationRenderer("#searchForm");
+		String pagingHTML = renderer.renderPagination(paging);
+		model.addAttribute("pagingHTML", pagingHTML);
+		model.addAttribute("paging", paging);
+		return "board/photo";
+		
+	}
+	@GetMapping("{bpId}")
+	public String PhotoDetail(@PathVariable String bpId, Model model) {
+		BoardPostVO photo = service.retrievePhoto(bpId);
+		model.addAttribute("photo", photo);
+		return "board/photo_detail";
+	}
+	
+	@GetMapping("/mod/{bpId}")
+	public String photoModPage(@PathVariable("bpId") String bpId, Model model) {
+		BoardPostVO updatePhoto = service.retrievePhoto(bpId);
+		model.addAttribute("photo", updatePhoto);
+		return "board/photo_mod";
+
+	}
+	@PutMapping("mod/{bpId}")
+	public String photoController(@RequestBody BoardPostVO updatePhoto, @PathVariable String bpId, Model model, @RealUser EmpVO realUser ) {
+		log.info("updatePhoto:{}",updatePhoto );
+		
+		if(StringUtils.isNotBlank(updatePhoto.getBpCn()) && StringUtils.isNotBlank(updatePhoto.getBpTitle())) {
+			updatePhoto.setBpId(bpId);
+			updatePhoto.setEmpId(realUser.getEmpId());
+			int cnt = service.modifyPhoto(updatePhoto);
+			if(cnt>0) {
+				model.addAttribute("msg", "ok");
+			}else {
+				model.addAttribute("msg", "fail");
+			}
+		}else {
+			model.addAttribute("msg", "empty");
+		}
+		return "jsonView";
+	}
+	
+	@DeleteMapping("del/{bpId}")
+	public String shraeDelController(@PathVariable String bpId, Model model) {
+		log.info("bpId:{}",bpId);
+		int cnt = service.removePhoto(bpId);
+		if(cnt>0) {
+			model.addAttribute("msg", "ok");
+		}else {
+			model.addAttribute("msg", "fail");
+		}
+		return "jsonView";
+	}
+	
+	@GetMapping("/add")
+	public String photoRegisterPage(@ModelAttribute("photo") BoardPostVO vo, Model model) {
+		return "board/photo_register";
+	}
+		
+	@PostMapping("/add")
+	public String photoAddController(@Validated(InsertGroup.class) @ModelAttribute("photo") BoardPostVO vo, Errors errors, Model model, @RealUser EmpVO realUser) {
+		log.info("photo : {}",vo);
+		if(!errors.hasErrors()) {
+			vo.setEmpId(realUser.getEmpId());
+			int cnt = service.createPhoto(vo);
+			if(cnt>0) {
+				return "redirect:/board/photo";
+			}else {
+				return  "board/photo_register";
+			}
+		}else {
+			return "board/photo_register";
+		}
+	}
+}

@@ -1,0 +1,88 @@
+package kr.or.navi.vo;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+import org.springframework.format.annotation.DateTimeFormat;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(of="proId")
+public class  ProjectVO implements Serializable{
+	private int rnum;
+	private String proId;
+	@NotBlank
+	private String proStId;
+	@NotBlank
+	private String proName;
+	private String proDesc;
+	@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+	private LocalDateTime proRegDt;
+	@NotNull
+	@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+	private LocalDateTime proDdlineEx;
+	@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+	private LocalDateTime proDdlineDt;
+	private String proDdlineYn;
+	private String empId;
+	private String empName;
+	private String cmId;
+	private String cmName;
+	private List<TeamVO> teamList;
+	private String wikiId;
+	private String myProject;
+	public boolean isPLMember(EmpVO emp) {
+		return emp.getEmpId().equals(this.empId);
+	}
+	public void setMyProject(String msg) {
+		myProject=msg;
+	}
+	@JsonIgnore
+	public int getProIng() {
+	    // 현재 날짜와 시간 구하기
+        LocalDateTime currentDate = LocalDateTime.now();
+
+        // 시작일로부터 현재까지의 기간과 전체 기간을 계산
+        long totalDuration = ChronoUnit.SECONDS.between(proRegDt, proDdlineEx);
+        long passedDuration = ChronoUnit.SECONDS.between(proRegDt, currentDate);
+
+        // 진행률 계산
+        int progressPercentage = (int) (passedDuration * 100 / totalDuration);
+        return progressPercentage;
+	}
+	public Object getProRegDtStr() {
+		if(proRegDt!=null)
+		return proRegDt.format(DateTimeFormatter.ISO_DATE);
+		return proRegDt;
+	}
+	public Object getProDdlineExStr() {
+		if(proDdlineEx!=null)
+		return proDdlineEx.format(DateTimeFormatter.ISO_DATE);
+		return proDdlineEx;
+	}
+	public Object getRealProRegDtStr() {
+		if(proRegDt!=null)
+		return proRegDt.format(DateTimeFormatter.ISO_DATE_TIME);
+		return proRegDt;
+	}
+	public Object getRealProDdlineExStr() {
+		if(proDdlineEx!=null)
+		return proDdlineEx.format(DateTimeFormatter.ISO_DATE_TIME);
+		return proDdlineEx;
+	}
+	public Object getIngProjectDT() {
+		if(proRegDt!=null && proDdlineEx!=null)
+		return ChronoUnit.DAYS.between(proRegDt, proDdlineEx)+"일";
+		return null;
+	}
+}

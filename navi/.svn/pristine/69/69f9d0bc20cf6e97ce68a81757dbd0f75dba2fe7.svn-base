@@ -1,0 +1,71 @@
+package kr.or.navi.mypagedetail.mybookmark.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import kr.or.navi.common.paging.BootstrapFormBasePaginationRenderer;
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.common.paging.PaginationRenderer;
+import kr.or.navi.mypage.service.MypageService;
+import kr.or.navi.security.RealUser;
+import kr.or.navi.vo.BoardPostVO;
+import kr.or.navi.vo.BookmarkIssueVO;
+import kr.or.navi.vo.BookmarkVO;
+import kr.or.navi.vo.EmpVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/mypage/bookmark")
+public class MyBookmarkController {
+	
+	@Inject
+	MypageService service;
+	
+	@GetMapping
+	public String mypageBook(@RealUser EmpVO realUser, Model model
+			, @RequestParam Map<String, Object> detailCondition
+			, @RequestParam(name = "page", required = false, defaultValue = "1") int currentPage) {
+		
+		PaginationInfo paging = new PaginationInfo(3, 3);
+		paging.setCurrentPage(currentPage);;
+		paging.setDetailCondition(detailCondition);
+		List<BookmarkVO> bookmarkList = service.bookmarkList(realUser.getEmpId(),paging);
+		model.addAttribute("list", bookmarkList);
+		List<BoardPostVO> boardList = service.myBoardList(realUser.getEmpId(), paging);
+		model.addAttribute("boardList", boardList);
+		PaginationRenderer renderer = new BootstrapFormBasePaginationRenderer("#searchForm");
+		String pagingHTML = renderer.renderPagination(paging);
+		model.addAttribute("pagingHTML", pagingHTML);
+		model.addAttribute("paging", paging);
+		return "mypage/bookmark/myBookmark";
+	}
+	
+    @PostMapping
+    public String insertIssueBookmark(@RequestBody BookmarkIssueVO insertVO) {
+    	int cnt = service.createIssueBookmark(insertVO);
+		if(cnt>0) {
+			return "ok";
+		}
+		return "no";
+    }
+
+    @PostMapping("/board")
+    public String insertBoardBookmark(@RequestBody BookmarkVO bookmark) {
+    	int cnt = service.createBoardBookmark(bookmark);
+		if(cnt>0) {
+			return "ok";
+		}
+		return "no";
+    }
+}

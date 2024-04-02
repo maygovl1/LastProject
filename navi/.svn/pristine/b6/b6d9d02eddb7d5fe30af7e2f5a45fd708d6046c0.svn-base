@@ -1,0 +1,27 @@
+package kr.or.navi.board.share.dao;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.vo.BoardPostFileVO;
+import kr.or.navi.vo.BoardPostVO;
+
+@Mapper
+public interface ShareDAO {
+	public List<BoardPostVO> selectShareList(PaginationInfo paging);
+	public int totalRecord(PaginationInfo paging);
+	public BoardPostVO selectShare(@Param("bpId") String bpId);
+	public int updateShare(@Param("vo")BoardPostVO vo);
+	public int deleteShare(@Param("bpId") String bpId);
+	public int insertShare(BoardPostVO vo);
+	
+	public int insertFile(BoardPostFileVO fvo);
+	
+	public List<BoardPostFileVO> selectFile(@Param("bpId") String bpId);
+	public int updateCnt(@Param("bpId") String bpId);
+	public BoardPostFileVO getAttach(@Param("bpFileId") String bpFileId);
+	public int deleteFileSaveFile(String bpFileId);
+}

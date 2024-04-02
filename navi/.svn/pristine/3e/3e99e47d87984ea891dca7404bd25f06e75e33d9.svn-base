@@ -1,0 +1,17 @@
+package kr.or.navi.vo;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(of="bbId")
+public class BookmarkBoardVO implements Serializable{
+	private String bbId;
+	private String bpId;
+	private String empId;
+	private LocalDateTime bbRegDt;
+	private LocalDateTime bbDelDt;
+}

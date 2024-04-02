@@ -1,0 +1,38 @@
+package kr.or.navi.projectdetail.dashboard.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import kr.or.navi.projectdetail.dashboard.service.DashBoardService;
+import kr.or.navi.projectdetail.dashboard.vo.TaskChartVO;
+import kr.or.navi.projectdetail.dashboard.vo.TeamChartVO;
+import kr.or.navi.projectdetail.filesave.controller.ProjectFilesaveController;
+import kr.or.navi.vo.TaskVO;
+import kr.or.navi.vo.TeamVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Controller
+@RequestMapping("/project/dashboard")
+@Slf4j
+public class ProjectDashBaordController {
+	@Inject
+	private DashBoardService service;
+	@GetMapping("{proId}")
+	public String dashboardPage(@PathVariable(name = "proId") String proId, Model model) {
+		log.info("proId : {}", proId);
+		List<TaskVO> retriveTaskList = service.retriveTaskList(proId);
+		TaskChartVO taskChartVO=new TaskChartVO(retriveTaskList);
+		List<TeamVO> teamList = service.retriveTeamList(proId);
+		TeamChartVO teamChartVO = new TeamChartVO(teamList);
+		model.addAttribute("chart", taskChartVO);
+		model.addAttribute("team", teamChartVO);
+		return "project/dashboard/dashboard";
+	}
+}

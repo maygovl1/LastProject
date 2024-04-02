@@ -1,0 +1,44 @@
+package kr.or.navi.projectdetail.gantt.vo;
+
+import java.io.Serializable;
+
+import kr.or.navi.vo.TaskVO;
+import lombok.Data;
+@Data
+public class GanttVOEvent implements Serializable{
+	private TaskVO task;
+	//식별자 taskId
+	private String id;
+	//라벨 내용 taskTitle
+	private String name;
+	//시작일 YYYY-MM-DD 형태
+	private String start;
+	//종료일 YYYY-MM-DD 형태
+	private String end;
+	//진행률
+	private int progress;
+	//상위 일감
+	private String dependencies;
+	public GanttVOEvent(TaskVO task) {
+		this.task=task;
+	}
+	public String getId() {
+		return task.getTaskId();
+	}
+	public String getName() {
+		return task.getTaskTitle();
+	}
+	public String getStart() {
+		return task.getTaskRegDtStr();
+	}
+	public String getEnd() {
+		return task.getTaskCompDtStr();
+	}
+	public int getProgress() {
+		return Integer.parseInt(task.getTaskProcessStatus().getTpsIng().replaceAll("%", "")) ;
+	}
+	public String getDependencies() {
+		return task.getTaskTopId();
+	}
+	
+}

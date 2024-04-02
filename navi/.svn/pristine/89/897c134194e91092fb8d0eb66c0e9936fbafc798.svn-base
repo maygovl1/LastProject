@@ -1,0 +1,121 @@
+package kr.or.navi.admin.form.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.validation.groups.Default;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import kr.or.navi.board.form.service.FormService;
+import kr.or.navi.common.paging.BootstrapFormBasePaginationRenderer;
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.common.paging.PaginationRenderer;
+import kr.or.navi.common.paging.SearchCondition;
+import kr.or.navi.security.RealUser;
+import kr.or.navi.vo.BoardPostVO;
+import kr.or.navi.vo.EmpVO;
+import lombok.extern.slf4j.Slf4j;
+@Slf4j
+@Controller
+@RequestMapping("/admin")
+public class AdminFormController {
+	
+	@Inject
+	private FormService service;
+	@GetMapping("/form")
+	public String formPage(
+			@RequestParam(name="page", required = false, defaultValue = "1") int currentPage
+			, Model model
+			, @ModelAttribute("simpleCondition") SearchCondition simpleCondition
+	) {
+		log.info("simpleCondition : {}",simpleCondition);
+		PaginationInfo paging = new PaginationInfo(3,3);
+		paging.setCurrentPage(currentPage);
+		paging.setSimpleCondition(simpleCondition);
+		List<BoardPostVO> formList = service.retrieveFormList(paging);
+		model.addAttribute("formList", formList);
+		PaginationRenderer renderer = new BootstrapFormBasePaginationRenderer("#searchForm");
+		String pagingHTML = renderer.renderPagination(paging);
+		model.addAttribute("pagingHTML",pagingHTML);
+		model.addAttribute("paging",paging);
+		return "admin/formboard/adminFormList";
+	}
+
+	@GetMapping("/form/{bpId}")
+	public String formDitailPage(@PathVariable("bpId")String bpId, Model model) {
+		BoardPostVO vo = service.retrieveForm(bpId);
+		model.addAttribute("bf", vo);
+		return "admin/formboard/adminFormDetail";
+	}
+	@DeleteMapping("form/del/{bpId}")
+	public String formDelController(@PathVariable String bpId,Model model) {
+		log.info("bpId:{}",bpId);
+		int cnt = service.deleteForm(bpId);
+		if(cnt>0) {
+			model.addAttribute("msg", "ok");
+		}else {
+			model.addAttribute("msg", "fail");
+		}
+		return "jsonView";
+	}
+	@PutMapping("form/mod/{bpId}")
+	public String formModController(@RequestBody BoardPostVO updateBp,@PathVariable String bpId,Model model,@RealUser EmpVO realUser) {
+		log.info("updateBp : {}",updateBp);
+		if(StringUtils.isNotBlank(updateBp.getBpCn()) && StringUtils.isNotBlank(updateBp.getBpTitle())) {
+			updateBp.setBpId(bpId);
+			updateBp.setEmpId(realUser.getEmpId());
+			int cnt = service.modifyForm(updateBp);
+			if(cnt>0) {
+				model.addAttribute("msg", "ok");
+			}else {
+				model.addAttribute("msg", "fail");
+			}
+		}else {
+			model.addAttribute("msg", "fail");
+		}
+		return "jsonView";
+	}
+
+	@GetMapping("/form/add")
+	public String formAddPage(@ModelAttribute("bf") BoardPostVO insertForm, Model model) {
+		return "admin/formboard/adminFormAdd";
+	}
+	@PostMapping("/form/add")
+	public String formAddController(@Validated(Default.class) @ModelAttribute("bf") BoardPostVO insertForm,Errors errors, Model model,@RealUser EmpVO realUser) {
+		log.info("bf : {}",insertForm);
+		if(!errors.hasErrors()) {
+			insertForm.setEmpId(realUser.getEmpId());
+			int cnt = service.createForm(insertForm);
+			if(cnt>0) {
+				//성공했을 경우
+				return "redirect:/admin/form";
+			}else {
+				return "admin/formboard/adminFormAdd";
+			}
+		}else {
+			return "admin/formboard/adminFormAdd";
+		}
+		
+	}
+
+	@GetMapping("/form/mod/{bpId}")
+	public String formModPage(@PathVariable("bpId") String bpId, Model model) {
+		BoardPostVO updateForm=service.retrieveForm(bpId);
+		model.addAttribute("bf", updateForm);
+		return "admin/formboard/adminFormMod";
+	}
+}

@@ -1,0 +1,16 @@
+{
+	"web": {
+		"client_id": "645096765694-r817bbius1r3g4ujcn5qt6t3151mgl12.apps.googleusercontent.com",
+		"project_id": "ddit-412506",
+		"auth_uri": "https://accounts.google.com/o/oauth2/auth",
+		"token_uri": "https://oauth2.googleapis.com/token",
+		"auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+		"client_secret": "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",
+		"redirect_uris": [
+			"http://localhost/apiTest/callback"
+		],
+		"javascript_origins": [
+			"http://localhost"
+		]
+	}
+}

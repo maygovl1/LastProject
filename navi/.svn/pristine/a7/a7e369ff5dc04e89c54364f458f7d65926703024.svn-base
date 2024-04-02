@@ -1,0 +1,47 @@
+package kr.or.navi.board.photo.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.navi.board.photo.dao.PhotoDAO;
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.vo.BoardCommentVO;
+import kr.or.navi.vo.BoardPostVO;
+import kr.or.navi.vo.EmpVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Service
+@Slf4j
+public class PhotoServiceImpl implements PhotoService {
+
+	@Inject
+	private PhotoDAO dao;
+
+	@Override
+	public List<BoardPostVO> retrievePhotoList(PaginationInfo paging) {
+		int totalRecord = dao.selectTotalRecord(paging);
+		paging.setTotalRecord(totalRecord);
+		return dao.selectPhotoList(paging);
+
+	}
+
+	@Override
+	public BoardPostVO retrievePhoto(String bpId) {
+		BoardPostVO detail = dao.selectPhoto(bpId);
+		return dao.selectPhoto(bpId);
+	}
+
+	@Override
+	public BoardCommentVO retrieveComment(String bcId) {
+		BoardCommentVO comment = dao.selectComment(bcId);
+		return dao.selectComment(bcId);
+	}
+	
+	@Override
+	public void modifyPhoto(BoardPostVO photo) {
+		dao.updatePhoto(photo);
+	}
+}

@@ -1,0 +1,118 @@
+package kr.or.navi.alarm.service;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.inject.Inject;
+import javax.json.Json;
+
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import kr.or.navi.alarm.dao.AlramTypeDAO;
+import kr.or.navi.mypagedetail.alarm.dao.AlramDAO;
+import kr.or.navi.project.dao.IssueDAO;
+import kr.or.navi.project.dao.ProjectDAO;
+import kr.or.navi.project.dao.TeamDAO;
+import kr.or.navi.vo.AlarmTypeVO;
+import kr.or.navi.vo.AlarmVO;
+import kr.or.navi.vo.EmpVO;
+import kr.or.navi.vo.IssueVO;
+import kr.or.navi.vo.ProjectVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Component 
+@Slf4j  
+public class SseEmitters {  
+	private static final AtomicLong counter = new AtomicLong();  
+	  
+    private final Map<EmpVO,SseEmitter> emitters = new HashMap();   
+    @Inject
+    private AlramTypeDAO atDao;
+    @Inject
+    private AlramDAO dao;
+    @Inject
+    private TeamDAO teamDao;
+    @Inject
+    private IssueDAO issueDao;
+    @Inject
+    private ProjectDAO projectDao;
+    public SseEmitter add(EmpVO empVO,SseEmitter emitter) {  
+    	log.info("emitter : {}",emitter);
+        this.emitters.put(empVO,emitter);  
+        log.info("new emitter added: {}", emitter);  
+        log.info("emitter list size: {}", emitters.size());  
+        emitter.onCompletion(() -> {  
+            log.info("onCompletion callback"); 
+            this.emitters.remove(emitter);    // 만료되면 리스트에서 삭제
+        });  
+        emitter.onTimeout(() -> {  
+            log.info("onTimeout callback");  
+            emitter.complete();  
+        });  
+  
+        return emitter;  
+    }  
+    public void count() {
+    	ObjectMapper objectMapper = new ObjectMapper();
+    	
+        long count = counter.incrementAndGet();  
+        String alram="알람왔음";
+        emitters.forEach((empVO,emitter) -> {  
+        	Map<String,String> map=new HashMap<String, String>();
+        	map.put("msg", "새로운 글이 등록되었습니다.");
+        	map.put("sendId", "길상");
+        	map.put("receiveId", "민규");
+            String jsonData = null;
+        	try {
+                jsonData = objectMapper.writeValueAsString(
+                		map
+                );
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        	log.info("empVO : {}",empVO);
+        	log.info("emitter : {}",emitter);
+            try {  
+                emitter.send(SseEmitter.event()
+                		.name("count")  
+                        .data(jsonData));  
+            } catch (IOException e) {  
+                throw new RuntimeException(e);  
+            }  
+        });  
+    } 
+    public void issueReg(EmpVO realUser,String issueId) {
+    	IssueVO selectIssue = issueDao.selectIssue(issueId);
+    	String proId = selectIssue.getProId();
+    	String selectPlId = teamDao.selectPlId(proId);
+    	AlarmTypeVO atVO = atDao.selectAlramType("A00003");
+    	
+        emitters.forEach((empVO,emitter) -> {  
+        	log.info("empVO : {}",empVO);
+        	log.info("emitter : {}",emitter);
+        	if(selectPlId.equals(empVO.getEmpId())) {
+        		AlarmVO alarmVO = new AlarmVO();
+            	alarmVO.setAltypeId("A00003");
+            	alarmVO.setAlRcvrId(empVO.getEmpId());
+            	alarmVO.setAlSndrId(realUser.getEmpId());
+            	alarmVO.setAlMoveUrl("/project/issue/"+proId+"/"+issueId);
+        		try {  
+                    emitter.send(SseEmitter.event()
+                    		.name("count")  
+                            .data("["+proId+"]"+atVO.getAltypeCn()));
+                    dao.insertAlram(alarmVO);
+                } catch (IOException e) {  
+                    throw new RuntimeException(e);  
+                }
+        	}
+        });  
+    }
+}

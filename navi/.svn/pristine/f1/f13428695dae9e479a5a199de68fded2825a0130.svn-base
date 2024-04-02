@@ -1,0 +1,22 @@
+package kr.or.navi.board.prais.dao;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.vo.BoardPostFileVO;
+import kr.or.navi.vo.BoardPostVO;
+
+@Mapper
+public interface PraisDAO {
+	
+	public List<BoardPostVO> selectPraisList(PaginationInfo paging);
+	public int totalRecord(PaginationInfo paging);
+	public BoardPostVO selectPrais(@Param ("bpId") String bpId);
+	public int updatePrais(@Param("vo") BoardPostVO vo);
+	public int deletePrais(@Param("bpId") String bpId);
+	public int insertPrais(BoardPostVO vo);
+	public int insertFile(BoardPostFileVO fvo);
+}

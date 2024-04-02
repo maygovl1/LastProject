@@ -1,0 +1,20 @@
+package kr.or.navi.todaylist.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Param;
+
+import kr.or.navi.common.paging.PaginationInfo;
+import kr.or.navi.todaylist.dao.TodayListDAO;
+import kr.or.navi.vo.TaskVO;
+import kr.or.navi.vo.TodayListVO;
+
+public interface TodayListService {
+	
+	//일감 전체조회
+	public List<TodayListVO> selectTaskList(PaginationInfo paging,String taskManId);
+	public List<TodayListVO> selectTodayList(String taskId);
+	public	int insertTdList(String taskId, String empId);
+	public  int deleteTdList(String taskId);
+}
